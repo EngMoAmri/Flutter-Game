@@ -5,7 +5,6 @@ import 'package:flame/cache.dart';
 import 'package:flame/extensions.dart' as ext;
 
 import 'package:flame/components.dart';
-import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
@@ -14,8 +13,7 @@ import 'config.dart';
 
 enum PlayState { welcome, playing, gameOver, won } // Add this enumeration
 
-class RecycleRush extends FlameGame
-    with HasCollisionDetection, KeyboardEvents, TapDetector {
+class RecycleRush extends FlameGame {
   // Modify this line
   RecycleRush()
       : super(
@@ -29,14 +27,14 @@ class RecycleRush extends FlameGame
   final rand = math.Random();
   double get width => size.x;
   double get height => size.y;
-  late double spacingX;
-  late double spacingY;
+  // late double spacingX;
+  // late double spacingY;
 
   late PlayState _playState; // Add from here...
   PlayState get playState => _playState;
   List<ext.Image> itemsIcons = [];
   List<ItemType> itemsTypes = [];
-
+  List<List<Node?>> board = [];
   set playState(PlayState playState) {
     _playState = playState;
     switch (playState) {
@@ -59,7 +57,7 @@ class RecycleRush extends FlameGame
 
     world.add(PlayArea());
 
-    playState = PlayState.welcome; // TODO change htis
+    playState = PlayState.welcome;
     final imagesLoader = Images();
 
     itemsIcons.addAll([
@@ -76,62 +74,240 @@ class RecycleRush extends FlameGame
       ItemType.paper,
       ItemType.plastic,
     ]);
+    // initialize the board
+    for (var x = 0; x < verticalItemsCount; x++) {
+      List<Node?> rowNodes = [];
+      for (var y = 0; y < horizontalItemsCount; y++) {
+        rowNodes.add(null);
+      }
+      board.add(rowNodes);
+    }
     startGame();
   }
 
   void startGame() {
     if (playState == PlayState.playing) return;
 
-    world.removeAll(world.children.query<Item>());
-
-    playState = PlayState.playing; // To here.
     score.value = 0;
-    List<Item> items = [];
-    spacingX = (4 /* TODO make this as variable */ - 1) / 2;
-    spacingY = (5 /* TODO make this as variable */ - 1) / 2;
+    List<Node> nodes = [];
+    // spacingX = (horizontalItemsCount - 1) / 2;
+    // spacingY = (verticalItemsCount - 1) / 2;
 
-    for (var y = 0; y < 5; y++) {
-      for (var x = 0; x <= 4; x++) {
+    for (var x = 0; x < verticalItemsCount; x++) {
+      for (var y = 0; y < horizontalItemsCount; y++) {
         // Vector2 position = Vector2(x - spacingX, y - spacingY);
         Vector2 position = Vector2(
-          (x + 0.5) * itemSize + (x + 1) * itemGutter,
-          (y + 2.0) * itemSize + y * itemGutter,
+          (y + 0.5) * itemSize + (y + 1) * itemGutter,
+          (x + 2.0) * itemSize + x * itemGutter,
         );
-
         int randomItemIndex = rand.nextInt(itemsTypes.length);
-        items.add(Item(
-            image: itemsIcons[randomItemIndex],
-            type: itemsTypes[randomItemIndex],
-            xPos: x,
-            yPos: y,
-            currentPosition: position));
+        var node = Node(
+            isUsable: true,
+            item: Item(
+                image: itemsIcons[randomItemIndex],
+                type: itemsTypes[randomItemIndex],
+                xPos: x,
+                yPos: y,
+                currentPosition: position));
+
+        nodes.add(node);
+        // set the node on the board list
+        board[x][y] = node;
       }
     }
 
-    world.addAll(items);
+    if (checkBoard()) {
+      // we have matches call again
+      startGame();
+      return;
+    }
+    world.removeAll(world.children.query<Node>());
+    world.addAll(nodes);
+    playState = PlayState.playing; // To here.
   } // Drop the debugMode
 
-  // @override // Add from here...
-  // void onTap() {
-  //   super.onTap();
-  //   startGame();
-  // } // To here.
+  bool checkBoard() {
+    bool hasMatch = false;
+    List<Item> itemsToRemove = [];
+    for (var x = 0; x < verticalItemsCount; x++) {
+      for (var y = 0; y < horizontalItemsCount; y++) {
+        if (board[x][y]!.isUsable) {
+          Item item = board[x][y]!.item!;
 
-  // @override
-  // KeyEventResult onKeyEvent(
-  //     RawKeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
-  //   super.onKeyEvent(event, keysPressed);
-  //   switch (event.logicalKey) {
-  //     case LogicalKeyboardKey.arrowLeft:
-  //       world.children.query<Bat>().first.moveBy(-batStep);
-  //     case LogicalKeyboardKey.arrowRight:
-  //       world.children.query<Bat>().first.moveBy(batStep);
-  //     case LogicalKeyboardKey.space: // Add from here...
-  //     case LogicalKeyboardKey.enter:
-  //       startGame(); // To here.
-  //   }
-  //   return KeyEventResult.handled;
-  // }
-  // @override
-  // Color backgroundColor() => const Color(0xfff2e8cf); // Add this override
+          // ensure its met matched
+          if (!item.isMatch) {
+            MatchResult connectedItemResult = isConnected(item);
+            if (connectedItemResult.connectedItems.length >= 3) {
+              itemsToRemove.addAll(connectedItemResult.connectedItems);
+              for (var connectedItem in connectedItemResult.connectedItems) {
+                connectedItem.isMatch = true;
+              }
+              hasMatch = true;
+            }
+          }
+        }
+      }
+    }
+
+    return hasMatch;
+  }
+
+  MatchResult isConnected(Item item) {
+    List<Item> connectedItems = [];
+    ItemType itemType = item.type;
+
+    connectedItems.add(item);
+    //check right
+    checkDirection(item, 1, 0, connectedItems);
+    //check left
+    checkDirection(item, -1, 0, connectedItems);
+
+    //have we make a 3 match horizontal
+    if (connectedItems.length == 3) {
+      print('3 match horrizontally ${itemType.name}');
+      return MatchResult(connectedItems, MatchDirection.Horizontal);
+    }
+    //check more than 3 (long horizontal)
+    if (connectedItems.length > 3) {
+      print('more 3 match horrizontally ${itemType.name}');
+      return MatchResult(connectedItems, MatchDirection.LongHorizontal);
+    }
+
+    // clear not connected items
+    connectedItems.clear();
+    // readd initial item
+    connectedItems.add(item);
+    //check up
+    checkDirection(item, 0, 1, connectedItems);
+
+    //check down
+    checkDirection(item, 0, -1, connectedItems);
+
+    //have we make a 3 match vertical
+    if (connectedItems.length == 3) {
+      print('3 match vertically ${itemType.name}');
+      return MatchResult(connectedItems, MatchDirection.Vertical);
+    }
+
+    //check more than 3 (long vertical)
+    if (connectedItems.length > 3) {
+      print('more than 3 match vertically ${itemType.name}');
+      return MatchResult(connectedItems, MatchDirection.LongVertical);
+    }
+    return MatchResult(connectedItems, MatchDirection.None);
+  }
+
+  checkDirection(Item item, int xDir, int yDir, List<Item> connectedItems) {
+    ItemType itemType = item.type;
+    int x = item.xPos + xDir;
+    int y = item.yPos + yDir;
+
+    // check we within thhe boudries
+    while (y >= 0 &&
+        y < horizontalItemsCount &&
+        x >= 0 &&
+        x < verticalItemsCount) {
+      if (board[x][y]!.isUsable) {
+        Item neighborItem = board[x][y]!.item!;
+
+        // does the type is match and not matched
+        if (!neighborItem.isMatch && neighborItem.type == itemType) {
+          connectedItems.add(neighborItem);
+          x += xDir;
+          y += yDir;
+        } else {
+          break;
+        }
+      }
+    }
+  }
+
+  /// Swapping item
+  Item? selectedItem;
+  bool isProcessingMove = false;
+  // Select item
+  void selectItem(Item item) {
+    // if we don't have an item selected set the new one
+    if (selectedItem == null) {
+      selectedItem = item;
+    }
+    // if we select the  same item twice set null
+    else if (selectedItem == item) {
+      selectedItem = null;
+    }
+    // if selectedItem != null and current item is different attempt a swap
+    else if (selectedItem != item) {
+      swapItem(selectedItem!, item);
+      // selecteditem back null
+      selectedItem = null;
+    }
+  }
+
+  // swap item logic
+  void swapItem(Item currentItem, Item targetItem) async {
+    // if not adjacent don't swap
+    if (!_isAdjacent(currentItem, targetItem)) {
+      return;
+    }
+    // do swap
+    isProcessingMove = true;
+    await _doSwap(currentItem, targetItem);
+    // this loop to make sure the items has been move
+    while (currentItem.isMoving || targetItem.isMoving) {
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
+    bool hasMatch = checkBoard();
+    if (!hasMatch) {
+      await _doSwap(currentItem, targetItem);
+
+      // this loop to make sure the items has been move
+      while (currentItem.isMoving || targetItem.isMoving) {
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+    }
+    isProcessingMove = false;
+  }
+
+  // do swap
+  Future<void> _doSwap(Item currentItem, Item targetItem) async {
+    Item temp = board[currentItem.xPos][currentItem.yPos]!.item!;
+    board[currentItem.xPos][currentItem.yPos]!.item =
+        board[targetItem.xPos][targetItem.yPos]!.item;
+    board[targetItem.xPos][targetItem.yPos]!.item = temp;
+
+    // update positions
+    int tempXPos = currentItem.xPos;
+    int tempYPos = currentItem.yPos;
+    currentItem.xPos = targetItem.xPos;
+    currentItem.yPos = targetItem.yPos;
+    targetItem.xPos = tempXPos;
+    targetItem.yPos = tempYPos;
+
+    await currentItem.moveToTarget(targetItem.position);
+    await targetItem.moveToTarget(currentItem.position);
+  }
+
+  // is adjacent
+  bool _isAdjacent(Item currentItem, Item targetItem) {
+    return ((currentItem.xPos - targetItem.xPos) +
+                (currentItem.yPos - targetItem.yPos))
+            .abs() ==
+        1;
+  }
+  // process Matches
+}
+
+class MatchResult {
+  MatchResult(this.connectedItems, this.direction);
+  List<Item> connectedItems;
+  MatchDirection direction;
+}
+
+enum MatchDirection {
+  Vertical,
+  Horizontal,
+  LongVertical,
+  LongHorizontal,
+  Super,
+  None
 }
