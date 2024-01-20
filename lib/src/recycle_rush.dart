@@ -116,7 +116,7 @@ class RecycleRush extends FlameGame {
       }
     }
 
-    if (checkBoard(true)) {
+    if (checkBoard(false)) {
       // we have matches call again
       startGame();
       return;
@@ -129,6 +129,12 @@ class RecycleRush extends FlameGame {
   bool checkBoard(bool takeAction) {
     bool hasMatched = false;
     List<Item> itemsToRemove = [];
+    // clear matches
+    for (var nodeRow in board) {
+      for (var node in nodeRow) {
+        node?.item?.isMatch = false;
+      }
+    }
     for (var row = 0; row < verticalItemsCount; row++) {
       for (var col = 0; col < horizontalItemsCount; col++) {
         if (board[row][col]!.isUsable) {
@@ -151,8 +157,16 @@ class RecycleRush extends FlameGame {
       }
     }
     if (takeAction) {
+      for (var itemToRemove in itemsToRemove) {
+        itemToRemove.isMatch = false;
+      }
       // removeAndRefill
       removeAndRefill(itemsToRemove);
+      // TODO vertical error
+      // chech for a board new match after first match
+      if (checkBoard(false)) {
+        checkBoard(true);
+      }
     }
     return hasMatched;
   }
@@ -249,7 +263,6 @@ class RecycleRush extends FlameGame {
         row < verticalItemsCount) {
       if (board[row][col]!.isUsable) {
         Item neighborItem = board[row][col]!.item!;
-
         // does the type is match and not matched
         if (!neighborItem.isMatch && neighborItem.type == itemType) {
           connectedItems.add(neighborItem);
@@ -346,9 +359,12 @@ class RecycleRush extends FlameGame {
       int col = item.col;
 
       // remove the item
-      remove(item);
+      world.remove(item.parent!);
+
       // create a blank node
-      board[row][col] = Node(isUsable: true, item: null);
+      Node node = Node(isUsable: true, item: null);
+      board[row][col] = node;
+      world.add(node);
     }
     // this is my idea to start from bottom
     for (var row = verticalItemsCount - 1; row >= 0; row--) {
@@ -374,13 +390,13 @@ class RecycleRush extends FlameGame {
     // y offset
     int yOffset = 1;
     // while the cell above our current cell is null and we're below the height of the board
-    while (row - yOffset > 0 && board[row - yOffset][col]!.item == null) {
+    while (row - yOffset >= 0 && board[row - yOffset][col]!.item == null) {
       // increament y offset
       print('the item above current cell is empty');
       yOffset++;
     }
     // we either hit the top of board or found an item
-    if (row - yOffset > 0 && board[row - yOffset][col]!.item != null) {
+    if (row - yOffset >= 0 && board[row - yOffset][col]!.item != null) {
       // we've found an item
       Item aboveItem = board[row - yOffset][col]!.item!;
       // move it to correct location
@@ -399,7 +415,7 @@ class RecycleRush extends FlameGame {
       board[row - yOffset][col] = Node(isUsable: true, item: null);
     }
     // if we have hit the top of the board
-    if (row - yOffset == 0) {
+    if (row - yOffset < 0) {
       print('reached the top');
       spawnItemAtTop(col);
     }
@@ -407,10 +423,42 @@ class RecycleRush extends FlameGame {
 
   // spawn item at top
   void spawnItemAtTop(int col) {
-    throw "Complete";
-  }
-  // find the index of lowest null
+    int nullRow = findLowestNullRow(col);
+    double locationToMoveTo = ((verticalItemsCount + 2.0) * itemSize +
+            verticalItemsCount * itemGutter) -
+        nullRow;
+    print('About to spawn an item and put it at $nullRow');
+    Vector2 targetPosition = Vector2(
+      (col + 0.5) * itemSize + (col + 1) * itemGutter,
+      (nullRow + 2.0) * itemSize + nullRow * itemGutter,
+    );
+    int randomItemIndex = rand.nextInt(itemsTypes.length);
+    var node = Node(
+        isUsable: true,
+        item: Item(
+            image: itemsIcons[randomItemIndex],
+            type: itemsTypes[randomItemIndex],
+            row: nullRow,
+            col: col,
+            currentPosition: Vector2(
+                targetPosition.x, targetPosition.y - locationToMoveTo)));
 
+    world.add(node);
+    // set the node on the board list
+    board[nullRow][col] = node;
+    node.item!.moveToTarget(targetPosition, 1);
+  }
+
+  // find the index of lowest null
+  int findLowestNullRow(int col) {
+    int lowestRowNull = 99;
+    for (var row = verticalItemsCount - 1; row >= 0; row--) {
+      if (board[row][col]!.item == null) {
+        lowestRowNull = row;
+      }
+    }
+    return lowestRowNull;
+  }
   // process Matches
 }
 
