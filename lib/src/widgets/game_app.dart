@@ -50,11 +50,8 @@ class _GameAppState extends State<GameApp> {
           child: SafeArea(
             child: Stack(
               children: [
-                FittedBox(
-                  fit: BoxFit.fill,
-                  child: Image.asset(
-                    'assets/images/background.jpg',
-                  ),
+                Image.asset(
+                  'assets/images/background.jpg',
                 ),
                 Padding(
                   padding: const EdgeInsets.all(16),

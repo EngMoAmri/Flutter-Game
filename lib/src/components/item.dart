@@ -5,17 +5,14 @@ import 'package:flame/extensions.dart';
 import 'package:flutter_game/src/config.dart';
 import 'package:flutter_game/src/recycle_rush.dart';
 
-import 'dart:math' as math;
-
 enum ItemType { can, cartoon, glass, paper, plastic }
 
-class Item extends SpriteComponent
-    with TapCallbacks, DragCallbacks, HasGameRef<RecycleRush> {
+class Item extends SpriteComponent with DragCallbacks, HasGameRef<RecycleRush> {
   Item(
       {required this.image,
       required this.type,
-      required this.xPos,
-      required this.yPos,
+      required this.row,
+      required this.col,
       required this.currentPosition})
       : super(
           position: currentPosition,
@@ -24,16 +21,17 @@ class Item extends SpriteComponent
         );
   final Image image;
   final ItemType type;
-  int xPos;
-  int yPos;
+  int row;
+  int col;
   bool isMatch = false;
   bool isMoving = false;
   Vector2 currentPosition;
+  Vector2? dragStartPosition;
   Vector2? dragEndPosition;
   Item? targetItem;
   void setPosition(int xPos, int yPos) {
-    this.xPos = xPos;
-    this.yPos = yPos;
+    this.row = xPos;
+    this.col = yPos;
   }
 
   @override
@@ -58,18 +56,11 @@ class Item extends SpriteComponent
   }
 
   @override
-  void onTapUp(TapUpEvent event) {
-    super.onTapUp(event);
-    if (game.isProcessingMove) return;
-    game.selectItem(this);
-  }
-
-  @override
   void onDragStart(DragStartEvent event) {
     super.onDragStart(event);
     if (game.isProcessingMove) return;
     game.selectedItem = this;
-    print('selected : $xPos $yPos');
+    dragStartPosition = event.localPosition;
   }
 
   @override
@@ -82,48 +73,50 @@ class Item extends SpriteComponent
   void onDragEnd(DragEndEvent event) async {
     super.onDragEnd(event);
     if (dragEndPosition == null) return;
-    var angle = (position.angleToSigned(dragEndPosition!) * 180 / math.pi);
-    print(angle);
-    if (angle > -45 && angle <= 45) {
-      // down
-      print('down');
+    if (dragStartPosition == null) return;
+    var xD = (dragStartPosition!.x - dragEndPosition!.x).abs();
+    var yD = (dragStartPosition!.y - dragEndPosition!.y).abs();
 
-      // get item below
-      if (xPos < verticalItemsCount - 1) {
-        // there is item bellow
-        if (game.board[xPos + 1][yPos]!.isUsable) {
-          targetItem = game.board[xPos + 1][yPos]!.item;
+    if (dragStartPosition!.x < dragEndPosition!.x) {
+      // to right side
+      if (dragStartPosition!.y < dragEndPosition!.y) {
+        // to down side
+        if (xD > yD) {
+          // move right
+          _moveRight();
+        } else {
+          // move down
+          _moveDown();
         }
-      }
-    } else if (angle > 45 && angle <= 135) {
-      // left
-      print('left');
-
-      // get item
-      if (yPos > 0) {
-        // there is item
-        if (game.board[xPos][yPos - 1]!.isUsable) {
-          targetItem = game.board[xPos][yPos - 1]!.item;
-        }
-      }
-    } else if (angle > 135 && angle <= -135) {
-      // top
-      print('top');
-      // get item below
-      if (xPos > 0) {
-        // there is item bellow
-        if (game.board[xPos - 1][yPos]!.isUsable) {
-          targetItem = game.board[xPos - 1][yPos]!.item;
+      } else {
+        // to up side
+        if (xD > yD) {
+          // move right
+          _moveRight();
+        } else {
+          // move up
+          _moveUp();
         }
       }
     } else {
-      // right
-      print('right');
-      // get item
-      if (yPos < horizontalItemsCount - 1) {
-        // there is item
-        if (game.board[xPos][yPos + 1]!.isUsable) {
-          targetItem = game.board[xPos][yPos + 1]!.item;
+      // to left side
+      if (dragStartPosition!.y < dragEndPosition!.y) {
+        // to down side
+        if (xD > yD) {
+          // move left
+          _moveLeft();
+        } else {
+          // move down
+          _moveDown();
+        }
+      } else {
+        // to up side
+        if (xD > yD) {
+          // move lef
+          _moveLeft();
+        } else {
+          // move up
+          _moveUp();
         }
       }
     }
@@ -131,6 +124,46 @@ class Item extends SpriteComponent
     if (game.selectedItem == this) {
       if (targetItem == null) return;
       game.swapItem(this, targetItem!);
+    }
+  }
+
+  void _moveDown() {
+    // get item below
+    if (row < verticalItemsCount - 1) {
+      // there is item bellow
+      if (game.board[row + 1][col]!.isUsable) {
+        targetItem = game.board[row + 1][col]!.item;
+      }
+    }
+  }
+
+  void _moveUp() {
+    // get item above
+    if (row > 0) {
+      // there is item bellow
+      if (game.board[row - 1][col]!.isUsable) {
+        targetItem = game.board[row - 1][col]!.item;
+      }
+    }
+  }
+
+  void _moveRight() {
+    // get item
+    if (col < horizontalItemsCount - 1) {
+      // there is item
+      if (game.board[row][col + 1]!.isUsable) {
+        targetItem = game.board[row][col + 1]!.item;
+      }
+    }
+  }
+
+  void _moveLeft() {
+    // get item
+    if (col > 0) {
+      // there is item
+      if (game.board[row][col - 1]!.isUsable) {
+        targetItem = game.board[row][col - 1]!.item;
+      }
     }
   }
 }

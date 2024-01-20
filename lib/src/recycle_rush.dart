@@ -75,9 +75,9 @@ class RecycleRush extends FlameGame {
       ItemType.plastic,
     ]);
     // initialize the board
-    for (var x = 0; x < verticalItemsCount; x++) {
+    for (var row = 0; row < verticalItemsCount; row++) {
       List<Node?> rowNodes = [];
-      for (var y = 0; y < horizontalItemsCount; y++) {
+      for (var col = 0; col < horizontalItemsCount; col++) {
         rowNodes.add(null);
       }
       board.add(rowNodes);
@@ -93,12 +93,12 @@ class RecycleRush extends FlameGame {
     // spacingX = (horizontalItemsCount - 1) / 2;
     // spacingY = (verticalItemsCount - 1) / 2;
 
-    for (var x = 0; x < verticalItemsCount; x++) {
-      for (var y = 0; y < horizontalItemsCount; y++) {
+    for (var row = 0; row < verticalItemsCount; row++) {
+      for (var col = 0; col < horizontalItemsCount; col++) {
         // Vector2 position = Vector2(x - spacingX, y - spacingY);
         Vector2 position = Vector2(
-          (y + 0.5) * itemSize + (y + 1) * itemGutter,
-          (x + 2.0) * itemSize + x * itemGutter,
+          (col + 0.5) * itemSize + (col + 1) * itemGutter,
+          (row + 2.0) * itemSize + row * itemGutter,
         );
         int randomItemIndex = rand.nextInt(itemsTypes.length);
         var node = Node(
@@ -106,17 +106,17 @@ class RecycleRush extends FlameGame {
             item: Item(
                 image: itemsIcons[randomItemIndex],
                 type: itemsTypes[randomItemIndex],
-                xPos: x,
-                yPos: y,
+                row: row,
+                col: col,
                 currentPosition: position));
 
         nodes.add(node);
         // set the node on the board list
-        board[x][y] = node;
+        board[row][col] = node;
       }
     }
 
-    if (checkBoard()) {
+    if (checkBoard(true)) {
       // we have matches call again
       startGame();
       return;
@@ -126,30 +126,35 @@ class RecycleRush extends FlameGame {
     playState = PlayState.playing; // To here.
   } // Drop the debugMode
 
-  bool checkBoard() {
-    bool hasMatch = false;
+  bool checkBoard(bool takeAction) {
+    bool hasMatched = false;
     List<Item> itemsToRemove = [];
-    for (var x = 0; x < verticalItemsCount; x++) {
-      for (var y = 0; y < horizontalItemsCount; y++) {
-        if (board[x][y]!.isUsable) {
-          Item item = board[x][y]!.item!;
+    for (var row = 0; row < verticalItemsCount; row++) {
+      for (var col = 0; col < horizontalItemsCount; col++) {
+        if (board[row][col]!.isUsable) {
+          Item item = board[row][col]!.item!;
 
           // ensure its met matched
           if (!item.isMatch) {
             MatchResult connectedItemResult = isConnected(item);
             if (connectedItemResult.connectedItems.length >= 3) {
-              itemsToRemove.addAll(connectedItemResult.connectedItems);
-              for (var connectedItem in connectedItemResult.connectedItems) {
+              // complex matching
+              MatchResult superMatchResult = superMatch(connectedItemResult);
+              itemsToRemove.addAll(superMatchResult.connectedItems);
+              for (var connectedItem in superMatchResult.connectedItems) {
                 connectedItem.isMatch = true;
               }
-              hasMatch = true;
+              hasMatched = true;
             }
           }
         }
       }
     }
-
-    return hasMatch;
+    if (takeAction) {
+      // removeAndRefill
+      removeAndRefill(itemsToRemove);
+    }
+    return hasMatched;
   }
 
   MatchResult isConnected(Item item) {
@@ -197,24 +202,59 @@ class RecycleRush extends FlameGame {
     return MatchResult(connectedItems, MatchDirection.None);
   }
 
+  MatchResult superMatch(MatchResult matchResult) {
+    // TODO test
+    // if we have a horizontal or long horizontal match
+    if (matchResult.direction == MatchDirection.Horizontal ||
+        matchResult.direction == MatchDirection.LongHorizontal) {
+      for (var item in matchResult.connectedItems) {
+        List<Item> extraConnectedItems = [];
+        checkDirection(item, 0, 1, extraConnectedItems);
+        checkDirection(item, 0, -1, extraConnectedItems);
+        if (extraConnectedItems.length >= 2) {
+          // we have a super horizontal match
+          extraConnectedItems.addAll(matchResult.connectedItems);
+          return MatchResult(extraConnectedItems, MatchDirection.Super);
+        }
+      }
+      return matchResult;
+    }
+    // if we have a veritcal or long vertical match
+    if (matchResult.direction == MatchDirection.Vertical ||
+        matchResult.direction == MatchDirection.LongVertical) {
+      for (var item in matchResult.connectedItems) {
+        List<Item> extraConnectedItems = [];
+        checkDirection(item, 1, 0, extraConnectedItems);
+        checkDirection(item, -1, 0, extraConnectedItems);
+        if (extraConnectedItems.length >= 2) {
+          // we have a super vertical match
+          extraConnectedItems.addAll(matchResult.connectedItems);
+          return MatchResult(extraConnectedItems, MatchDirection.Super);
+        }
+      }
+      return matchResult;
+    }
+    return matchResult;
+  }
+
   checkDirection(Item item, int xDir, int yDir, List<Item> connectedItems) {
     ItemType itemType = item.type;
-    int x = item.xPos + xDir;
-    int y = item.yPos + yDir;
+    int row = item.row + xDir;
+    int col = item.col + yDir;
 
     // check we within thhe boudries
-    while (y >= 0 &&
-        y < horizontalItemsCount &&
-        x >= 0 &&
-        x < verticalItemsCount) {
-      if (board[x][y]!.isUsable) {
-        Item neighborItem = board[x][y]!.item!;
+    while (col >= 0 &&
+        col < horizontalItemsCount &&
+        row >= 0 &&
+        row < verticalItemsCount) {
+      if (board[row][col]!.isUsable) {
+        Item neighborItem = board[row][col]!.item!;
 
         // does the type is match and not matched
         if (!neighborItem.isMatch && neighborItem.type == itemType) {
           connectedItems.add(neighborItem);
-          x += xDir;
-          y += yDir;
+          row += xDir;
+          col += yDir;
         } else {
           break;
         }
@@ -256,7 +296,7 @@ class RecycleRush extends FlameGame {
     while (currentItem.isMoving || targetItem.isMoving) {
       await Future.delayed(const Duration(milliseconds: 500));
     }
-    bool hasMatch = checkBoard();
+    bool hasMatch = checkBoard(true);
     if (!hasMatch) {
       await _doSwap(currentItem, targetItem);
 
@@ -266,34 +306,111 @@ class RecycleRush extends FlameGame {
       }
     }
     isProcessingMove = false;
+    selectedItem = null;
   }
 
   // do swap
   Future<void> _doSwap(Item currentItem, Item targetItem) async {
-    Item temp = board[currentItem.xPos][currentItem.yPos]!.item!;
-    board[currentItem.xPos][currentItem.yPos]!.item =
-        board[targetItem.xPos][targetItem.yPos]!.item;
-    board[targetItem.xPos][targetItem.yPos]!.item = temp;
+    Item temp = board[currentItem.row][currentItem.col]!.item!;
+    board[currentItem.row][currentItem.col]!.item =
+        board[targetItem.row][targetItem.col]!.item;
+    board[targetItem.row][targetItem.col]!.item = temp;
 
     // update positions
-    int tempXPos = currentItem.xPos;
-    int tempYPos = currentItem.yPos;
-    currentItem.xPos = targetItem.xPos;
-    currentItem.yPos = targetItem.yPos;
-    targetItem.xPos = tempXPos;
-    targetItem.yPos = tempYPos;
+    int tempXPos = currentItem.row;
+    int tempYPos = currentItem.col;
+    currentItem.row = targetItem.row;
+    currentItem.col = targetItem.col;
+    targetItem.row = tempXPos;
+    targetItem.col = tempYPos;
 
-    await currentItem.moveToTarget(targetItem.position);
-    await targetItem.moveToTarget(currentItem.position);
+    await currentItem.moveToTarget(targetItem.position, 0.2);
+    await targetItem.moveToTarget(currentItem.position, 0.2);
   }
 
   // is adjacent
   bool _isAdjacent(Item currentItem, Item targetItem) {
-    return ((currentItem.xPos - targetItem.xPos) +
-                (currentItem.yPos - targetItem.yPos))
+    return ((currentItem.row - targetItem.row) +
+                (currentItem.col - targetItem.col))
             .abs() ==
         1;
   }
+
+  /// cascading items
+  // remove and refill(List of items)
+  void removeAndRefill(List<Item> itemsToRemove) {
+    // removing the items amd clearing the board at that location
+    for (var item in itemsToRemove) {
+      // getting it's x and y poses and storing them
+      int row = item.row;
+      int col = item.col;
+
+      // remove the item
+      remove(item);
+      // create a blank node
+      board[row][col] = Node(isUsable: true, item: null);
+    }
+    // this is my idea to start from bottom
+    for (var row = verticalItemsCount - 1; row >= 0; row--) {
+      for (var col = horizontalItemsCount - 1; col >= 0; col--) {
+        if (board[row][col]!.item == null) {
+          print('the location row: $row col: $col is Empty');
+          refillItem(row, col);
+        }
+      }
+    }
+    // for (var row = 0; row < verticalItemsCount; row++) {
+    //   for (var col = 0; col < horizontalItemsCount; col++) {
+    //     if (board[row][col]!.item == null) {
+    //       print('the location row: $row col: $col is Empty');
+    //       refillItem(row, col);
+    //     }
+    //   }
+    // }
+  }
+
+  // RefillItems
+  void refillItem(int row, int col) {
+    // y offset
+    int yOffset = 1;
+    // while the cell above our current cell is null and we're below the height of the board
+    while (row - yOffset > 0 && board[row - yOffset][col]!.item == null) {
+      // increament y offset
+      print('the item above current cell is empty');
+      yOffset++;
+    }
+    // we either hit the top of board or found an item
+    if (row - yOffset > 0 && board[row - yOffset][col]!.item != null) {
+      // we've found an item
+      Item aboveItem = board[row - yOffset][col]!.item!;
+      // move it to correct location
+      Vector2 targetPos = Vector2(
+        (col + 0.5) * itemSize + (col + 1) * itemGutter,
+        (row + 2.0) * itemSize + row * itemGutter,
+      );
+      aboveItem.moveToTarget(targetPos, 1);
+      print(
+          'move item at: row: ${row - yOffset}, col: $col moved to : row: $row, col: $col');
+      // update position
+      aboveItem.setPosition(row, col);
+      // update board
+      board[row][col] = board[row - yOffset][col];
+      // set old position to null
+      board[row - yOffset][col] = Node(isUsable: true, item: null);
+    }
+    // if we have hit the top of the board
+    if (row - yOffset == 0) {
+      print('reached the top');
+      spawnItemAtTop(col);
+    }
+  }
+
+  // spawn item at top
+  void spawnItemAtTop(int col) {
+    throw "Complete";
+  }
+  // find the index of lowest null
+
   // process Matches
 }
 
