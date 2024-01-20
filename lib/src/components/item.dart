@@ -29,9 +29,9 @@ class Item extends SpriteComponent with DragCallbacks, HasGameRef<RecycleRush> {
   Vector2? dragStartPosition;
   Vector2? dragEndPosition;
   Item? targetItem;
-  void setPosition(int xPos, int yPos) {
-    this.row = xPos;
-    this.col = yPos;
+  void setPosition(int row, int col) {
+    this.row = row;
+    this.col = col;
   }
 
   @override
@@ -47,9 +47,9 @@ class Item extends SpriteComponent with DragCallbacks, HasGameRef<RecycleRush> {
   }
 
   // moveToTarget
-  Future<void> moveToTarget(Vector2 targetPos) async {
+  Future<void> moveToTarget(Vector2 targetPos, double duration) async {
     isMoving = true;
-    await add(MoveToEffect(targetPos, EffectController(duration: 0.2),
+    await add(MoveToEffect(targetPos, EffectController(duration: duration),
         onComplete: () {
       isMoving = false;
     }));
