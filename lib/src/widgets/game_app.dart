@@ -1,9 +1,9 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_game/src/config.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../recycle_rush.dart';
-import '../config.dart';
 import 'overlay_screen.dart'; // Add this import
 import 'score_card.dart'; // And this one too
 
@@ -47,52 +47,62 @@ class _GameAppState extends State<GameApp> {
               ],
             ),
           ),
-          child: SafeArea(
-            child: Stack(
-              children: [
-                Image.asset(
-                  'assets/images/background.jpg',
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Center(
-                    child: Column(
-                      // Modify from here...
-                      children: [
-                        ScoreCard(score: game.score),
-                        Expanded(
-                          child: FittedBox(
-                            child: SizedBox(
-                              width: gameWidth,
-                              height: gameHeight,
-                              child: GameWidget(
-                                game: game,
-                                overlayBuilderMap: {
-                                  PlayState.welcome.name: (context, game) =>
-                                      const OverlayScreen(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ScoreCard(
+                    goul: game.goul,
+                    moves: game.moves,
+                    points: game.points,
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: SizedBox(
+                        width: gameWidth,
+                        height: gameWidth,
+                        child: GameWidget(
+                          game: game,
+                          overlayBuilderMap: {
+                            PlayState.welcome.name:
+                                (context, RecycleRush game) => GestureDetector(
+                                      onTap: () {
+                                        game.startGame();
+                                      },
+                                      child: const OverlayScreen(
                                         title: 'TAP TO PLAY',
-                                        subtitle: 'Use arrow keys or swipe',
+                                        subtitle: '',
                                       ),
-                                  PlayState.gameOver.name: (context, game) =>
-                                      const OverlayScreen(
+                                    ),
+                            PlayState.gameOver.name:
+                                (context, RecycleRush game) => GestureDetector(
+                                      onTap: () {
+                                        game.startGame();
+                                      },
+                                      child: const OverlayScreen(
                                         title: 'G A M E   O V E R',
                                         subtitle: 'Tap to Play Again',
                                       ),
-                                  PlayState.won.name: (context, game) =>
-                                      const OverlayScreen(
-                                        title: 'Y O U   W O N ! ! !',
-                                        subtitle: 'Tap to Play Again',
-                                      ),
-                                },
-                              ),
-                            ),
-                          ),
+                                    ),
+                            PlayState.won.name: (context, RecycleRush game) =>
+                                GestureDetector(
+                                  onTap: () {
+                                    game.startGame();
+                                  },
+                                  child: const OverlayScreen(
+                                    title: 'Y O U   W O N ! ! !',
+                                    subtitle: 'Tap to Play Again',
+                                  ),
+                                ),
+                          },
                         ),
-                      ],
-                    ), // To here.
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ), // To here.
             ),
           ),
         ),

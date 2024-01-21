@@ -15,6 +15,7 @@ class OverlayScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       alignment: const Alignment(0, -0.15),
+      color: Colors.amber,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
