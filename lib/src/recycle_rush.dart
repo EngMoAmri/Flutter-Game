@@ -68,6 +68,7 @@ class RecycleRush extends FlameGame {
         (gameWidth - (itemGutter * verticalItemsCount)) / horizontalItemsCount;
 
     for (var node in world.children.query<Node>()) {
+      node.size = Vector2(itemSize, itemSize);
       node.item?.size = Vector2(itemSize, itemSize);
       for (var row = 0; row < verticalItemsCount; row++) {
         var founded = false;
@@ -77,8 +78,8 @@ class RecycleRush extends FlameGame {
             (row + 0.5) * itemSize + row * itemGutter,
           );
           if (board[row][col] == node) {
-            node.item?.position = position;
-            node.item?.currentPosition = position;
+            // node.item?.position = position;
+            node.position = position;
             founded = true;
             break;
           }
@@ -94,9 +95,9 @@ class RecycleRush extends FlameGame {
     super.onLoad();
 
     camera.viewfinder.anchor = Anchor.topLeft;
-
-    world.add(PlayArea());
-
+    var playArea = PlayArea();
+    world.add(playArea);
+    // playArea.position = size / 2;
     playState = PlayState.welcome;
     final imagesLoader = Images();
 
@@ -129,6 +130,7 @@ class RecycleRush extends FlameGame {
     points.value = 0;
     moves.value = 100; // TODO foreach level
     List<Node> nodes = [];
+    List<Item> items = [];
 
     for (var row = 0; row < verticalItemsCount; row++) {
       for (var col = 0; col < horizontalItemsCount; col++) {
@@ -137,15 +139,17 @@ class RecycleRush extends FlameGame {
           (row + 0.5) * itemSize + row * itemGutter,
         );
         int randomItemIndex = rand.nextInt(itemsTypes.length);
-        var node = Node(
-            isUsable: true,
-            item: Item(
-                image: itemsIcons[randomItemIndex],
-                type: itemsTypes[randomItemIndex],
-                row: row,
-                col: col,
-                currentPosition: position));
+        var item = Item(
+          itemPosition: position,
+          image: itemsIcons[randomItemIndex],
+          type: itemsTypes[randomItemIndex],
+          row: row,
+          col: col,
+        );
+        item.priority = 100;
+        var node = Node(nodePosition: position, isUsable: true, item: item);
 
+        items.add(item);
         nodes.add(node);
         // set the node on the board list
         board[row][col] = node;
@@ -158,9 +162,9 @@ class RecycleRush extends FlameGame {
       return;
     }
     world.removeAll(world.children.query<Node>());
-    world.addAll(nodes);
-    // processTurnOnMatchBoard(
-    //     false); //TODO I think there is a better solution where we must not have a match at start of the game
+    world.removeAll(world.children.query<Item>());
+    await world.addAll(nodes);
+    await world.addAll(items);
   } // Drop the debugMode
 
   Future<bool> checkBoardForNextMove() async {
@@ -477,17 +481,9 @@ class RecycleRush extends FlameGame {
   Future<void> removeAndRefill(List<Item> itemsToRemove) async {
     // removing the items amd clearing the board at that location
     for (var item in itemsToRemove) {
-      // getting it's x and y poses and storing them
-      int row = item.row;
-      int col = item.col;
-
       // remove the item
-      world.remove(item.parent!);
-
-      // create a blank node
-      Node node = Node(isUsable: true, item: null);
-      board[row][col] = node;
-      world.add(node);
+      item.parent!.remove(item);
+      board[item.row][item.col]!.item = null;
     }
     // this is my idea to start from bottom
     for (var row = verticalItemsCount - 1; row >= 0; row--) {
@@ -498,14 +494,6 @@ class RecycleRush extends FlameGame {
         }
       }
     }
-    // for (var row = 0; row < verticalItemsCount; row++) {
-    //   for (var col = 0; col < horizontalItemsCount; col++) {
-    //     if (board[row][col]!.item == null) {
-    //       print('the location row: $row col: $col is Empty');
-    //       refillItem(row, col);
-    //     }
-    //   }
-    // }
   }
 
   // RefillItems
@@ -521,22 +509,18 @@ class RecycleRush extends FlameGame {
     // we either hit the top of board or found an item
     if (row - yOffset >= 0 && board[row - yOffset][col]!.item != null) {
       // we've found an item
+
       Item aboveItem = board[row - yOffset][col]!.item!;
-      // move it to correct location
-      Vector2 targetPos = Vector2(
-        (col + 0.5) * itemSize + (col + 1) * itemGutter,
-        (row + 0.5) * itemSize + row * itemGutter,
-      );
-      // print(
-      //     'move item at: row: ${row - yOffset}, col: $col moved to : row: $row, col: $col');
-      await aboveItem.moveToTarget(targetPos, 0.2);
+      // set previous node item to null
+      board[row - yOffset][col]!.item = null;
+
+      await aboveItem.moveToTarget(board[row][col]!.position, 0.2);
+
+      board[row][col]!.item = aboveItem;
 
       // update position
       aboveItem.setPosition(row, col);
       // update board
-      board[row][col] = board[row - yOffset][col];
-      // set old position to null
-      board[row - yOffset][col] = Node(isUsable: true, item: null);
     }
     // if we have hit the top of the board
     if (row - yOffset < 0) {
@@ -548,30 +532,19 @@ class RecycleRush extends FlameGame {
   // spawn item at top
   Future<void> spawnItemAtTop(int col) async {
     int nullRow = findLowestNullRow(col);
-    double locationToMoveTo = ((verticalItemsCount + 0.5) * itemSize +
-            verticalItemsCount * itemGutter) -
-        nullRow;
-    // print('About to spawn an item and put it at $nullRow');
-    Vector2 targetPosition = Vector2(
-      (col + 0.5) * itemSize + (col + 1) * itemGutter,
-      (nullRow + 0.5) * itemSize + nullRow * itemGutter,
-    );
     int randomItemIndex = rand.nextInt(itemsTypes.length);
-    var node = Node(
-        isUsable: true,
-        item: Item(
-            image: itemsIcons[randomItemIndex],
-            type: itemsTypes[randomItemIndex],
-            row: nullRow,
-            col: col,
-            currentPosition: Vector2(
-                targetPosition.x, targetPosition.y - locationToMoveTo)));
-
-    world.add(node);
-    // set the node on the board list
-    board[nullRow][col] = node;
-    await node.item!.moveToTarget(targetPosition, 0.2);
-    while (node.item!.isMoving) {
+    var targetPosition = board[nullRow][col]!.nodePosition;
+    var item = Item(
+      itemPosition: Vector2(targetPosition.x, -60),
+      image: itemsIcons[randomItemIndex],
+      type: itemsTypes[randomItemIndex],
+      row: nullRow,
+      col: col,
+    );
+    await item.moveToTarget(targetPosition, 0.2);
+    world.add(item);
+    board[nullRow][col]!.item = item;
+    while (item.isMoving) {
       await Future.delayed(const Duration(milliseconds: 50));
     }
   }

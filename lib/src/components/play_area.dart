@@ -9,7 +9,8 @@ import '../recycle_rush.dart';
 class PlayArea extends RectangleComponent with HasGameReference<RecycleRush> {
   PlayArea()
       : super(
-          paint: Paint()..color = const Color(0xfff2e8cf),
+          // anchor: Anchor.center,
+          paint: Paint()..color = Colors.transparent,
           children: [RectangleHitbox()],
         );
 

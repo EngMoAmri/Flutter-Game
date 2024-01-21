@@ -13,11 +13,10 @@ class Item extends SpriteComponent with DragCallbacks, HasGameRef<RecycleRush> {
       required this.type,
       required this.row,
       required this.col,
-      required this.currentPosition})
+      required this.itemPosition})
       : super(
-          position: currentPosition,
+          position: itemPosition,
           anchor: Anchor.center,
-          // children: [RectangleHitbox()],
         );
   final Image image;
   final ItemType type;
@@ -25,7 +24,7 @@ class Item extends SpriteComponent with DragCallbacks, HasGameRef<RecycleRush> {
   int col;
   bool isMatch = false;
   bool isMoving = false;
-  Vector2 currentPosition;
+  Vector2 itemPosition;
   Vector2? dragStartPosition;
   Vector2? dragEndPosition;
   Item? targetItem;
@@ -36,8 +35,6 @@ class Item extends SpriteComponent with DragCallbacks, HasGameRef<RecycleRush> {
 
   @override
   Future<void> onLoad() async {
-    // final background = await Flame.images.load("background.jpg");
-    // size = gameRef.size;
     size = Vector2(itemSize, itemSize);
     sprite = Sprite(
       image,

@@ -1,22 +1,20 @@
 import 'package:flame/components.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_game/src/components/item.dart';
+import 'package:flutter_game/src/config.dart';
 
-class Node extends PositionComponent {
-  Node({required this.isUsable, required this.item});
-  // to determine if the place can be fill with item or not
+class Node extends RectangleComponent {
+  Node({required this.isUsable, required this.item, required this.nodePosition})
+      : super(
+          position: nodePosition,
+          anchor: Anchor.center,
+          paint: Paint()..color = Colors.black26,
+        ); // to determine if the place can be fill with item or not
   bool isUsable;
   Item? item;
-
+  Vector2 nodePosition;
   @override
   void onLoad() {
-    if (item != null) {
-      add(item!);
-    }
+    size = Vector2(itemSize, itemSize);
   }
-
-  // @override
-  // void render(Canvas canvas) {
-  //   if (visible) {
-  //   } // If not visible none of the children will be rendered
-  // }
 }
