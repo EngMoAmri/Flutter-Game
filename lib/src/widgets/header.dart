@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class ScoreCard extends StatelessWidget {
-  const ScoreCard({
+class Header extends StatelessWidget {
+  const Header({
     super.key,
     required this.goul,
     required this.moves,
@@ -17,20 +17,41 @@ class ScoreCard extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: ValueListenableBuilder<int>(
-            valueListenable: goul,
-            builder: (context, goul, child) {
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(12, 6, 12, 18),
-                child: FittedBox(
-                  fit: BoxFit.fitWidth,
-                  child: Text(
-                    'Goul: $goul'.toUpperCase(),
-                    style: Theme.of(context).textTheme.titleLarge!,
-                  ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: Container()),
+                    Image.asset('assets/icons/star_off.png', width: 36),
+                    Expanded(child: Container()),
+                    Image.asset('assets/icons/star_on.png', width: 36),
+                    Expanded(child: Container()),
+                    Image.asset('assets/icons/star.gif', width: 36),
+                  ],
                 ),
-              );
-            },
+                const SizedBox(
+                  height: 10,
+                ),
+                ValueListenableBuilder<int>(
+                  valueListenable: goul,
+                  builder: (context, goul, child) {
+                    return ValueListenableBuilder<int>(
+                      valueListenable: points,
+                      builder: (context, points, child) {
+                        return LinearProgressIndicator(
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Colors.green,
+                          ),
+                          value: points / goul,
+                        );
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
         Expanded(

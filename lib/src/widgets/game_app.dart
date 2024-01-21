@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../recycle_rush.dart';
 import 'overlay_screen.dart'; // Add this import
-import 'score_card.dart'; // And this one too
+import 'header.dart'; // And this one too
 
 class GameApp extends StatefulWidget {
   // Modify this line
@@ -53,7 +53,7 @@ class _GameAppState extends State<GameApp> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ScoreCard(
+                  Header(
                     goul: game.goul,
                     moves: game.moves,
                     points: game.points,
