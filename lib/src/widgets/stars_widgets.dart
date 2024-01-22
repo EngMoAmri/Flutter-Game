@@ -8,7 +8,7 @@ class StarOffWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Image.asset(
       'assets/icons/star.png',
-      color: Colors.green[200],
+      color: Colors.black54,
       opacity: const AlwaysStoppedAnimation(0.6),
       width: (screenSize.width > 480) ? 32 : screenSize.width * 0.067,
     );

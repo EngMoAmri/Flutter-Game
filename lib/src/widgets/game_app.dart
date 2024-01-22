@@ -5,6 +5,7 @@ import 'package:flutter_game/src/config.dart';
 // import 'package:google_fonts/google_fonts.dart';
 
 import '../recycle_rush.dart';
+import 'helps_widget.dart';
 import 'overlay_screen.dart'; // Add this import
 import 'header.dart'; // And this one too
 
@@ -18,11 +19,14 @@ class GameApp extends StatefulWidget {
 
 class _GameAppState extends State<GameApp> {
   late final RecycleRush game;
-
+  final player = AudioPlayer();
   @override
   void initState() {
     super.initState();
-    AudioPlayer().play(AssetSource('sounds/background_music.mp3'));
+    player.play(
+      AssetSource('sounds/background_music.mp3'),
+    );
+    player.setReleaseMode(ReleaseMode.loop);
 
     game = RecycleRush();
   }
@@ -40,6 +44,12 @@ class _GameAppState extends State<GameApp> {
     } else {
       gameHeight = maxLength;
     }
+    // make it square
+    if (gameHeight > gameWidth) {
+      gameHeight = gameWidth;
+    } else {
+      gameWidth = gameHeight;
+    }
     itemGutter = gameWidth * itemGutterRatio;
     itemSize = (horizontalItemsCount > verticalItemsCount)
         ? (gameWidth - (itemGutter * verticalItemsCount)) / horizontalItemsCount
@@ -51,89 +61,89 @@ class _GameAppState extends State<GameApp> {
       theme: ThemeData(
         useMaterial3: true,
       ),
-      home: Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-              image: DecorationImage(
-                  fit: BoxFit.cover,
-                  image: AssetImage(
-                    'assets/images/background.jpg',
-                  ))),
-          margin: EdgeInsets.zero,
-          child: Column(
-            children: [
-              Header(
-                goul: game.goul,
-                moves: game.moves,
-                points: game.points,
-                screenSize: size,
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              Expanded(
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SizedBox(
-                      width: gameWidth,
-                      height: gameHeight,
-                      child: GameWidget(
-                        game: game,
-                        overlayBuilderMap: {
-                          PlayState.loading.name: (context, RecycleRush game) =>
-                              Center(
-                                child: SizedBox(
-                                  width: gameWidth,
-                                  height: gameHeight,
+      home: SafeArea(
+        child: Scaffold(
+          body: Container(
+            decoration: const BoxDecoration(
+                image: DecorationImage(
+                    fit: BoxFit.cover,
+                    image: AssetImage(
+                      'assets/images/background-1.jpg',
+                    ))),
+            margin: EdgeInsets.zero,
+            child: Column(
+              children: [
+                Header(
+                  goul: game.goul,
+                  moves: game.moves,
+                  points: game.points,
+                  screenSize: size,
+                ),
+                Expanded(child: Container()),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SizedBox(
+                    width: gameWidth,
+                    height: gameHeight,
+                    child: GameWidget(
+                      game: game,
+                      overlayBuilderMap: {
+                        PlayState.loading.name: (context, RecycleRush game) =>
+                            Center(
+                              child: SizedBox(
+                                width: gameWidth,
+                                height: gameHeight,
+                                child: const OverlayScreen(
+                                  title: 'Loading',
+                                  subtitle: '',
+                                ),
+                              ),
+                            ),
+                        PlayState.gameOver.name: (context, RecycleRush game) =>
+                            Center(
+                              child: SizedBox(
+                                width: gameWidth,
+                                height: gameHeight,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {});
+                                    game.startGame();
+                                  },
                                   child: const OverlayScreen(
-                                    title: 'Loading',
-                                    subtitle: '',
+                                    title: 'G A M E   O V E R',
+                                    subtitle: 'Tap to Play Again',
                                   ),
                                 ),
                               ),
-                          PlayState.gameOver.name:
-                              (context, RecycleRush game) => Center(
-                                    child: SizedBox(
-                                      width: gameWidth,
-                                      height: gameHeight,
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          setState(() {});
-                                          game.startGame();
-                                        },
-                                        child: const OverlayScreen(
-                                          title: 'G A M E   O V E R',
-                                          subtitle: 'Tap to Play Again',
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                          PlayState.won.name: (context, RecycleRush game) =>
-                              Center(
-                                child: SizedBox(
-                                  width: gameWidth,
-                                  height: gameHeight,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      setState(() {});
-                                      game.startGame();
-                                    },
-                                    child: const OverlayScreen(
-                                      title: 'Y O U   W O N ! ! !',
-                                      subtitle: 'Tap to Play Again',
-                                    ),
+                            ),
+                        PlayState.won.name: (context, RecycleRush game) =>
+                            Center(
+                              child: SizedBox(
+                                width: gameWidth,
+                                height: gameHeight,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {});
+                                    game.startGame();
+                                  },
+                                  child: const OverlayScreen(
+                                    title: 'Y O U   W O N ! ! !',
+                                    subtitle: 'Tap to Play Again',
                                   ),
                                 ),
                               ),
-                        },
-                      ),
+                            ),
+                      },
                     ),
                   ),
                 ),
-              ),
-            ],
+                Expanded(child: Container()),
+                HelpsWidget(
+                  screenSize: size,
+                ),
+                // Expanded(child: Container()),
+              ],
+            ),
           ),
         ),
       ),

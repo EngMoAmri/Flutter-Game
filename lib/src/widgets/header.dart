@@ -31,7 +31,7 @@ class _HeaderState extends State<Header> {
     return Stack(
       children: [
         Card(
-          color: Colors.green[400],
+          color: Colors.white70,
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(20),
@@ -171,7 +171,7 @@ class _HeaderState extends State<Header> {
                                           color: Colors.black38,
                                         ),
                                         BoxShadow(
-                                          color: Colors.greenAccent,
+                                          color: Colors.brown,
                                           spreadRadius: -12.0,
                                           blurRadius: 12.0,
                                         ),
@@ -184,7 +184,7 @@ class _HeaderState extends State<Header> {
                                         value: points / goul,
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
-                                                Colors.blue),
+                                                Colors.blue[500]!),
                                         backgroundColor: Colors.transparent,
                                       ),
                                     ),
@@ -220,7 +220,7 @@ class _HeaderState extends State<Header> {
                         color: Colors.black38,
                       ),
                       BoxShadow(
-                        color: Colors.greenAccent,
+                        color: Colors.brown,
                         spreadRadius: -16.0,
                         blurRadius: 40.0,
                       ),
@@ -265,11 +265,11 @@ class _HeaderState extends State<Header> {
           Expanded(
             child: Card(
               elevation: 10,
-              color: Colors.green[300],
+              color: Colors.white,
               shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(60),
-                    bottomRight: Radius.circular(60)),
+                    bottomLeft: Radius.circular(10),
+                    bottomRight: Radius.circular(10)),
               ),
               margin: EdgeInsets.zero,
               child: Padding(
@@ -278,16 +278,24 @@ class _HeaderState extends State<Header> {
                   valueListenable: widget.moves,
                   builder: (context, moves, child) {
                     return SizedBox(
-                      height: 95,
+                      height: 85,
                       child: Padding(
-                        padding: const EdgeInsets.all(16.0),
+                        padding: const EdgeInsets.all(8.0),
                         child: FittedBox(
-                          fit: BoxFit.fitHeight,
+                          fit: BoxFit.fitWidth,
                           child: Text(
                             '$moves',
                             style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green[900]),
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                              shadows: <Shadow>[
+                                Shadow(
+                                  offset: Offset(1.0, 1.2),
+                                  blurRadius: 1.0,
+                                  color: Colors.brown[800]!,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),

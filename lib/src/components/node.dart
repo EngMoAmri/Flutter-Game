@@ -8,7 +8,7 @@ class Node extends RectangleComponent {
       : super(
           position: nodePosition,
           anchor: Anchor.center,
-          paint: Paint()..color = Colors.blue.withAlpha(70),
+          paint: Paint()..color = Colors.brown[200]!.withAlpha(200),
         ); // to determine if the place can be fill with item or not
   bool isUsable;
   Item? item;

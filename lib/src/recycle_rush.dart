@@ -16,6 +16,11 @@ import 'match_result.dart';
 enum PlayState { loading, playing, gameOver, won } // Add this enumeration
 
 class RecycleRush extends FlameGame {
+  List<ext.Image> itemsIcons = [];
+  List<ItemType> itemsTypes = [];
+  List<List<Node?>> board = [];
+  List<Item> itemsToRemove = [];
+
   @override
   ext.Color backgroundColor() {
     // remove background black color
@@ -27,18 +32,9 @@ class RecycleRush extends FlameGame {
   final ValueNotifier<int> moves = ValueNotifier(100); // amount of moves
   final ValueNotifier<int> points = ValueNotifier(0); // amount of points earned
   final rand = math.Random();
-  // double get width => size.x;
-  // double get height => size.y;
 
   late PlayState _playState; // Add from here...
   PlayState get playState => _playState;
-  List<ext.Image> itemsIcons = [];
-  List<ItemType> itemsTypes = [];
-  List<List<Node?>> board = [];
-  List<Item> itemsToRemove = [];
-
-  // // this is to stop player from swapping when items are moving is playing
-  // bool canPlay = false;
 
   set playState(PlayState playState) {
     _playState = playState;
@@ -52,8 +48,9 @@ class RecycleRush extends FlameGame {
         overlays.remove(PlayState.gameOver.name);
         overlays.remove(PlayState.won.name);
     }
-  } // To here.
+  }
 
+  // for responsive widgets
   @override
   void onGameResize(ext.Vector2 size) {
     if (size.x > maxLength) {
@@ -125,8 +122,6 @@ class RecycleRush extends FlameGame {
     super.onLoad();
     playState = PlayState.loading;
     camera.viewfinder.anchor = Anchor.topLeft;
-    // var playArea = PlayArea();
-    // world.add(playArea);
     final imagesLoader = Images();
 
     itemsIcons.addAll([
@@ -154,6 +149,8 @@ class RecycleRush extends FlameGame {
     startGame();
   }
 
+  /// start game function
+  /// this function will be called at the begining of the game and if the game has been over and the player wants to play again
   void startGame() async {
     if (playState == PlayState.playing) return;
     points.value = 0;
@@ -202,6 +199,7 @@ class RecycleRush extends FlameGame {
     await world.addAll(items);
   }
 
+  /// this function is to check if there a future match or not, if not we need to make shuffle to the items
   Future<bool> checkBoardForNextMove() async {
     if (playState == PlayState.gameOver ||
         // playState == PlayState.welcome ||
@@ -272,6 +270,7 @@ class RecycleRush extends FlameGame {
     return false;
   }
 
+  /// this function to check for matches, it will return the match direction
   Future<MatchDirection> checkBoard() async {
     if (playState == PlayState.gameOver ||
         // playState == PlayState.welcome ||
@@ -310,6 +309,8 @@ class RecycleRush extends FlameGame {
     return matchDirection;
   }
 
+  /// this function to deal with matches
+  /// TODO make more points and make block bomber, row or colum bomber like candy crash
   Future<void> processTurnOnMatchBoard(
       MatchDirection matchDirection, bool subtractMoves) async {
     for (var itemToRemove in itemsToRemove) {
@@ -340,6 +341,7 @@ class RecycleRush extends FlameGame {
     }
   }
 
+  /// this will shuffle the items, this method will be called until the next match be existed
   Future<void> shuffleItems() async {
     // put all items in one list to shuffle the list
     List<Item> items = [];
@@ -379,9 +381,9 @@ class RecycleRush extends FlameGame {
     await Future.delayed(const Duration(milliseconds: 400));
   }
 
+  /// this method will return the connected items connected to one
   MatchResult isConnected(Item item) {
     List<Item> connectedItems = [];
-    // ItemType itemType = item.type;
 
     connectedItems.add(item);
     //check right
@@ -424,8 +426,9 @@ class RecycleRush extends FlameGame {
     return MatchResult(connectedItems, MatchDirection.None);
   }
 
+  /// super match method checker
+  /// TODO implement only if it's one row or column
   MatchResult superMatch(MatchResult matchResult) {
-    // TODO test
     // if we have a horizontal or long horizontal match
     if (matchResult.direction == MatchDirection.Horizontal ||
         matchResult.direction == MatchDirection.LongHorizontal) {
@@ -459,6 +462,7 @@ class RecycleRush extends FlameGame {
     return matchResult;
   }
 
+  /// set items connected to item
   checkDirection(Item item, int xDir, int yDir, List<Item> connectedItems) {
     ItemType itemType = item.type;
     int row = item.row + xDir;
@@ -471,7 +475,7 @@ class RecycleRush extends FlameGame {
         row < verticalItemsCount) {
       if (board[row][col]!.isUsable) {
         Item neighborItem = board[row][col]!.item!;
-        // does the type is match and not matched
+        // does the type is match and not matched before
         if (!neighborItem.isMatch && neighborItem.type == itemType) {
           connectedItems.add(neighborItem);
           row += xDir;
@@ -483,10 +487,11 @@ class RecycleRush extends FlameGame {
     }
   }
 
-  /// Swapping item
+  /// Swapping item part
   Item? selectedItem;
   bool isProcessingMove = false;
-  // Select item
+
+  /// Select item by first place the drag started
   void selectItem(Item item) {
     // if we don't have an item selected set the new one
     if (selectedItem == null) {
@@ -504,7 +509,7 @@ class RecycleRush extends FlameGame {
     }
   }
 
-  // swap item logic
+  /// swap item logic
   void swapItem(Item currentItem, Item targetItem) async {
     // to ensure all items are in there places
     for (var row = 0; row < verticalItemsCount; row++) {
@@ -543,7 +548,8 @@ class RecycleRush extends FlameGame {
     selectedItem = null;
   }
 
-  // do swap
+  /// do swap  changing items places
+  /// [moveItems] if true will play the animtaion of movement or the swap is just for testing
   Future<void> _doSwap(
       Item currentItem, Item targetItem, bool moveItems) async {
     Item temp = board[currentItem.row][currentItem.col]!.item!;
@@ -563,7 +569,7 @@ class RecycleRush extends FlameGame {
     await targetItem.moveToTarget(currentItem.position, 0.2);
   }
 
-  // is adjacent
+  /// check if two items are adjacent
   bool _isAdjacent(Item currentItem, Item targetItem) {
     return ((currentItem.row - targetItem.row) +
                 (currentItem.col - targetItem.col))
@@ -572,7 +578,7 @@ class RecycleRush extends FlameGame {
   }
 
   /// cascading items
-  // remove and refill(List of items)
+  /// remove and refill(List of items)
   Future<void> removeAndRefill(List<Item> itemsToRemove) async {
     // removing the items amd clearing the board at that location
     for (var item in itemsToRemove) {
@@ -591,7 +597,7 @@ class RecycleRush extends FlameGame {
     }
   }
 
-  // RefillItems
+  /// Refill Items
   Future<void> refillItem(int row, int col) async {
     // y offset
     int yOffset = 1;
@@ -624,7 +630,7 @@ class RecycleRush extends FlameGame {
     }
   }
 
-  // spawn item at top
+  /// spawn new item at top
   Future<void> spawnItemAtTop(int col) async {
     int nullRow = findLowestNullRow(col);
     int randomItemIndex = rand.nextInt(itemsTypes.length);
@@ -641,7 +647,7 @@ class RecycleRush extends FlameGame {
     board[nullRow][col]!.item = item;
   }
 
-  // find the index of lowest null
+  /// find the index of lowest null to move items to
   int findLowestNullRow(int col) {
     int lowestRowNull = 99;
     for (var row = verticalItemsCount - 1; row >= 0; row--) {
@@ -653,6 +659,7 @@ class RecycleRush extends FlameGame {
     return lowestRowNull;
   }
 
+  /// do game calculations like moves, points,...
   void processTurn(int pointsToGain, bool subtractMoves) {
     points.value += pointsToGain;
 
