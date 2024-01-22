@@ -1,10 +1,12 @@
-var gameWidth = 820.0;
-var gameHeight = 1600.0;
+double maxLength = 500.0;
+var gameWidth = 500.0;
+var gameHeight = 500.0;
+const maxItemInRowAndCol = 8;
+const horizontalItemsCount = 4;
+const verticalItemsCount = 8;
 
-// TODO foreach level
-const horizontalItemsCount = 5;
-const verticalItemsCount = 5;
-
-var itemGutter = gameWidth * 0.015;
-var itemSize =
-    (gameWidth - (itemGutter * verticalItemsCount)) / horizontalItemsCount;
+var itemGutterRatio = 0.001;
+var itemGutter = gameWidth * itemGutterRatio;
+var itemSize = (horizontalItemsCount > verticalItemsCount)
+    ? (gameWidth - (itemGutter * verticalItemsCount)) / horizontalItemsCount
+    : (gameWidth - (itemGutter * horizontalItemsCount)) / verticalItemsCount;

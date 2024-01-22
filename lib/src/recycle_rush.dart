@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/cache.dart';
 import 'package:flame/extensions.dart' as ext;
 
@@ -12,7 +13,7 @@ import 'components/components.dart';
 import 'config.dart';
 import 'match_result.dart';
 
-enum PlayState { welcome, playing, gameOver, won } // Add this enumeration
+enum PlayState { loading, playing, gameOver, won } // Add this enumeration
 
 class RecycleRush extends FlameGame {
   @override
@@ -26,9 +27,8 @@ class RecycleRush extends FlameGame {
   final ValueNotifier<int> moves = ValueNotifier(100); // amount of moves
   final ValueNotifier<int> points = ValueNotifier(0); // amount of points earned
   final rand = math.Random();
-  double get width => size.x;
-  double get height => size.y;
-  double maxWidth = 500;
+  // double get width => size.x;
+  // double get height => size.y;
 
   late PlayState _playState; // Add from here...
   PlayState get playState => _playState;
@@ -37,15 +37,18 @@ class RecycleRush extends FlameGame {
   List<List<Node?>> board = [];
   List<Item> itemsToRemove = [];
 
+  // // this is to stop player from swapping when items are moving is playing
+  // bool canPlay = false;
+
   set playState(PlayState playState) {
     _playState = playState;
     switch (playState) {
-      case PlayState.welcome:
+      case PlayState.loading:
       case PlayState.gameOver:
       case PlayState.won:
         overlays.add(playState.name);
       case PlayState.playing:
-        overlays.remove(PlayState.welcome.name);
+        overlays.remove(PlayState.loading.name);
         overlays.remove(PlayState.gameOver.name);
         overlays.remove(PlayState.won.name);
     }
@@ -53,33 +56,60 @@ class RecycleRush extends FlameGame {
 
   @override
   void onGameResize(ext.Vector2 size) {
-    if (size.x > maxWidth) {
-      gameWidth = maxWidth;
-      gameHeight = maxWidth;
+    if (size.x > maxLength) {
+      gameWidth = maxLength;
     } else {
       gameWidth = size.x;
+    }
+    if (size.y > maxLength) {
+      gameHeight = maxLength;
+    } else {
       gameHeight = size.x;
     }
-    for (var playArea in world.children.query<PlayArea>()) {
-      playArea.size = Vector2(gameWidth, gameHeight);
-    }
-    itemGutter = gameWidth * 0.015;
-    itemSize =
-        (gameWidth - (itemGutter * verticalItemsCount)) / horizontalItemsCount;
+    itemGutter = gameWidth * itemGutterRatio;
+    itemSize = (horizontalItemsCount > verticalItemsCount)
+        ? (gameWidth - (itemGutter * verticalItemsCount)) / horizontalItemsCount
+        : (gameWidth - (itemGutter * horizontalItemsCount)) /
+            verticalItemsCount;
 
     for (var node in world.children.query<Node>()) {
       node.size = Vector2(itemSize, itemSize);
-      node.item?.size = Vector2(itemSize, itemSize);
       for (var row = 0; row < verticalItemsCount; row++) {
         var founded = false;
         for (var col = 0; col < horizontalItemsCount; col++) {
           Vector2 position = Vector2(
-            (col + 0.5) * itemSize + (col + 1) * itemGutter,
-            (row + 0.5) * itemSize + row * itemGutter,
+            (col + 0.5) * itemSize +
+                col * itemGutter +
+                itemSize * ((maxItemInRowAndCol - horizontalItemsCount) / 2),
+            (row + 0.5) * itemSize +
+                row * itemGutter +
+                itemSize * ((maxItemInRowAndCol - verticalItemsCount) / 2),
           );
           if (board[row][col] == node) {
-            // node.item?.position = position;
             node.position = position;
+            founded = true;
+            break;
+          }
+        }
+        if (founded) break;
+      }
+    }
+    for (var item in world.children.query<Item>()) {
+      item.size = Vector2(itemSize, itemSize);
+      for (var row = 0; row < verticalItemsCount; row++) {
+        var founded = false;
+        for (var col = 0; col < horizontalItemsCount; col++) {
+          if (!(board[row][col]!.isUsable)) continue;
+          Vector2 position = Vector2(
+            (col + 0.5) * itemSize +
+                col * itemGutter +
+                itemSize * ((maxItemInRowAndCol - horizontalItemsCount) / 2),
+            (row + 0.5) * itemSize +
+                row * itemGutter +
+                itemSize * ((maxItemInRowAndCol - verticalItemsCount) / 2),
+          );
+          if (board[row][col]!.item == item) {
+            item.position = position;
             founded = true;
             break;
           }
@@ -93,12 +123,10 @@ class RecycleRush extends FlameGame {
   @override
   FutureOr<void> onLoad() async {
     super.onLoad();
-
+    playState = PlayState.loading;
     camera.viewfinder.anchor = Anchor.topLeft;
-    var playArea = PlayArea();
-    world.add(playArea);
-    // playArea.position = size / 2;
-    playState = PlayState.welcome;
+    // var playArea = PlayArea();
+    // world.add(playArea);
     final imagesLoader = Images();
 
     itemsIcons.addAll([
@@ -123,10 +151,11 @@ class RecycleRush extends FlameGame {
       }
       board.add(rowNodes);
     }
+    startGame();
   }
 
   void startGame() async {
-    playState = PlayState.playing; // To here.
+    if (playState == PlayState.playing) return;
     points.value = 0;
     moves.value = 100; // TODO foreach level
     List<Node> nodes = [];
@@ -134,9 +163,14 @@ class RecycleRush extends FlameGame {
 
     for (var row = 0; row < verticalItemsCount; row++) {
       for (var col = 0; col < horizontalItemsCount; col++) {
+        // if (!(board[row][col]!.isUsable)) continue;
         Vector2 position = Vector2(
-          (col + 0.5) * itemSize + (col + 1) * itemGutter,
-          (row + 0.5) * itemSize + row * itemGutter,
+          (col + 0.5) * itemSize +
+              col * itemGutter +
+              itemSize * ((maxItemInRowAndCol - horizontalItemsCount) / 2),
+          (row + 0.5) * itemSize +
+              row * itemGutter +
+              itemSize * ((maxItemInRowAndCol - verticalItemsCount) / 2),
         );
         int randomItemIndex = rand.nextInt(itemsTypes.length);
         var item = Item(
@@ -156,20 +190,21 @@ class RecycleRush extends FlameGame {
       }
     }
 
-    if (await checkBoard()) {
+    if (await checkBoard() != MatchDirection.None) {
       // we have matches call again
       startGame();
       return;
     }
+    playState = PlayState.playing;
     world.removeAll(world.children.query<Node>());
     world.removeAll(world.children.query<Item>());
     await world.addAll(nodes);
     await world.addAll(items);
-  } // Drop the debugMode
+  }
 
   Future<bool> checkBoardForNextMove() async {
     if (playState == PlayState.gameOver ||
-        playState == PlayState.welcome ||
+        // playState == PlayState.welcome ||
         playState == PlayState.won) {
       return false;
     }
@@ -183,9 +218,9 @@ class RecycleRush extends FlameGame {
             if (neighborItem != null) {
               // do a test swap to check if there is a match
               _doSwap(item, neighborItem, false);
-              var hasMatches = await checkBoard();
+              var matchDirection = await checkBoard();
               _doSwap(item, neighborItem, false);
-              if (hasMatches) {
+              if (matchDirection != MatchDirection.None) {
                 return true;
               }
             }
@@ -197,9 +232,9 @@ class RecycleRush extends FlameGame {
             if (neighborItem != null) {
               // do a test swap to check if there is a match
               _doSwap(item, neighborItem, false);
-              var hasMatches = await checkBoard();
+              var matchDirection = await checkBoard();
               _doSwap(item, neighborItem, false);
-              if (hasMatches) {
+              if (matchDirection != MatchDirection.None) {
                 return true;
               }
             }
@@ -210,9 +245,9 @@ class RecycleRush extends FlameGame {
             if (neighborItem != null) {
               // do a test swap to check if there is a match
               _doSwap(item, neighborItem, false);
-              var hasMatches = await checkBoard();
+              var matchDirection = await checkBoard();
               _doSwap(item, neighborItem, false);
-              if (hasMatches) {
+              if (matchDirection != MatchDirection.None) {
                 return true;
               }
             }
@@ -224,9 +259,9 @@ class RecycleRush extends FlameGame {
             if (neighborItem != null) {
               // do a test swap to check if there is a match
               _doSwap(item, neighborItem, false);
-              var hasMatches = await checkBoard();
+              var matchDirection = await checkBoard();
               _doSwap(item, neighborItem, false);
-              if (hasMatches) {
+              if (matchDirection != MatchDirection.None) {
                 return true;
               }
             }
@@ -237,13 +272,13 @@ class RecycleRush extends FlameGame {
     return false;
   }
 
-  Future<bool> checkBoard() async {
+  Future<MatchDirection> checkBoard() async {
     if (playState == PlayState.gameOver ||
-        playState == PlayState.welcome ||
+        // playState == PlayState.welcome ||
         playState == PlayState.won) {
-      return false;
+      return MatchDirection.None;
     }
-    bool hasMatched = false;
+    MatchDirection matchDirection = MatchDirection.None;
     itemsToRemove.clear();
     // clear matches
     for (var nodeRow in board) {
@@ -266,32 +301,82 @@ class RecycleRush extends FlameGame {
               for (var connectedItem in superMatchResult.connectedItems) {
                 connectedItem.isMatch = true;
               }
-              hasMatched = true;
+              matchDirection = superMatchResult.direction;
             }
           }
         }
       }
     }
-    return hasMatched;
+    return matchDirection;
   }
 
-  Future<void> processTurnOnMatchBoard(bool subtractMoves) async {
+  Future<void> processTurnOnMatchBoard(
+      MatchDirection matchDirection, bool subtractMoves) async {
     for (var itemToRemove in itemsToRemove) {
       itemToRemove.isMatch = false;
+    }
+    if (matchDirection == MatchDirection.Horizontal ||
+        matchDirection == MatchDirection.Vertical) {
+      AudioPlayer().play(AssetSource('sounds/good.mp3'));
+    } else if (matchDirection == MatchDirection.LongHorizontal ||
+        matchDirection == MatchDirection.LongVertical) {
+      AudioPlayer().play(AssetSource('sounds/better.mp3'));
+    } else {
+      AudioPlayer().play(AssetSource('sounds/super.mp3'));
     }
     // removeAndRefill
     await removeAndRefill(itemsToRemove);
     processTurn(1, subtractMoves);
     await Future.delayed(const Duration(milliseconds: 400));
-    if (await checkBoard()) {
-      await processTurnOnMatchBoard(false);
+    var newMatchDirection = await checkBoard();
+    if (newMatchDirection != MatchDirection.None) {
+      await processTurnOnMatchBoard(newMatchDirection, false);
     }
     var hasNextMatch = await checkBoardForNextMove();
-    if (hasNextMatch) {
-      print('+++++++++++++++++++++++++++++');
-    } else {
-      print('@@                         @@');
+    if (!hasNextMatch) {
+      // we need to shuffle the existing items
+      print('we need to shuffle');
+      await shuffleItems();
     }
+  }
+
+  Future<void> shuffleItems() async {
+    // put all items in one list to shuffle the list
+    List<Item> items = [];
+    for (var row = 0; row < verticalItemsCount; row++) {
+      for (var col = 0; col < horizontalItemsCount; col++) {
+        if (board[row][col]!.isUsable) {
+          items.add(board[row][col]!.item!);
+        }
+      }
+    }
+    items.shuffle();
+    int itemIndex = 0;
+    for (var row = 0; row < verticalItemsCount; row++) {
+      for (var col = 0; col < horizontalItemsCount; col++) {
+        if (board[row][col]!.isUsable) {
+          items[itemIndex].row = row;
+          items[itemIndex].col = col;
+          board[row][col]!.item = items[itemIndex++];
+        }
+      }
+    }
+    // the shuffle did'nt work so do it again
+    if (await checkBoard() != MatchDirection.None) {
+      return await shuffleItems();
+    }
+    // move to target
+    itemIndex = 0;
+
+    for (var row = 0; row < verticalItemsCount; row++) {
+      for (var col = 0; col < horizontalItemsCount; col++) {
+        if (board[row][col]!.isUsable) {
+          (items[itemIndex++]).moveToTarget(board[row][col]!.position, 0.4);
+        }
+      }
+    }
+    // wait for the animation to end
+    await Future.delayed(const Duration(milliseconds: 400));
   }
 
   MatchResult isConnected(Item item) {
@@ -421,6 +506,16 @@ class RecycleRush extends FlameGame {
 
   // swap item logic
   void swapItem(Item currentItem, Item targetItem) async {
+    // to ensure all items are in there places
+    for (var row = 0; row < verticalItemsCount; row++) {
+      for (var col = 0; col < horizontalItemsCount; col++) {
+        if (board[row][col]!.isUsable) {
+          if (board[row][col]!.item!.isMoving) {
+            return;
+          }
+        }
+      }
+    }
     // if not adjacent don't swap
     if (!_isAdjacent(currentItem, targetItem)) {
       return;
@@ -430,19 +525,19 @@ class RecycleRush extends FlameGame {
     await _doSwap(currentItem, targetItem, true);
     // this loop to make sure the items has been move
     while (currentItem.isMoving || targetItem.isMoving) {
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 200));
     }
-    bool hasMatch = await checkBoard();
-    if (!hasMatch) {
+    MatchDirection matchDirection = await checkBoard();
+    if (matchDirection == MatchDirection.None) {
       await _doSwap(currentItem, targetItem, true);
 
       // this loop to make sure the items has been move
       while (currentItem.isMoving || targetItem.isMoving) {
-        await Future.delayed(const Duration(milliseconds: 500));
+        await Future.delayed(const Duration(milliseconds: 200));
       }
     } else {
       // we have a match
-      await processTurnOnMatchBoard(true);
+      await processTurnOnMatchBoard(matchDirection, true);
     }
     isProcessingMove = false;
     selectedItem = null;
@@ -464,7 +559,7 @@ class RecycleRush extends FlameGame {
     targetItem.row = tempXPos;
     targetItem.col = tempYPos;
     if (!moveItems) return;
-    await currentItem.moveToTarget(targetItem.position, 0.2);
+    currentItem.moveToTarget(targetItem.position, 0.2);
     await targetItem.moveToTarget(currentItem.position, 0.2);
   }
 
@@ -514,7 +609,7 @@ class RecycleRush extends FlameGame {
       // set previous node item to null
       board[row - yOffset][col]!.item = null;
 
-      await aboveItem.moveToTarget(board[row][col]!.position, 0.2);
+      aboveItem.moveToTarget(board[row][col]!.position, 0.2);
 
       board[row][col]!.item = aboveItem;
 
@@ -525,7 +620,7 @@ class RecycleRush extends FlameGame {
     // if we have hit the top of the board
     if (row - yOffset < 0) {
       // print('reached the top');
-      await spawnItemAtTop(col);
+      spawnItemAtTop(col);
     }
   }
 
@@ -541,12 +636,9 @@ class RecycleRush extends FlameGame {
       row: nullRow,
       col: col,
     );
-    await item.moveToTarget(targetPosition, 0.2);
+    item.moveToTarget(targetPosition, 0.2);
     world.add(item);
     board[nullRow][col]!.item = item;
-    while (item.isMoving) {
-      await Future.delayed(const Duration(milliseconds: 50));
-    }
   }
 
   // find the index of lowest null

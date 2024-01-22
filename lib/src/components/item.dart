@@ -46,10 +46,12 @@ class Item extends SpriteComponent with DragCallbacks, HasGameRef<RecycleRush> {
   // moveToTarget
   Future<void> moveToTarget(Vector2 targetPos, double duration) async {
     isMoving = true;
-    await add(MoveToEffect(targetPos, EffectController(duration: duration),
-        onComplete: () {
-      isMoving = false;
-    }));
+    add(MoveToEffect(
+      targetPos,
+      EffectController(duration: duration),
+    ));
+    await Future.delayed(Duration(milliseconds: (duration * 1000).toInt()));
+    isMoving = false;
   }
 
   @override

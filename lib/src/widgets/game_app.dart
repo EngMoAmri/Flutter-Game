@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_game/src/config.dart';
@@ -21,12 +22,30 @@ class _GameAppState extends State<GameApp> {
   @override
   void initState() {
     super.initState();
+    AudioPlayer().play(AssetSource('sounds/background_music.mp3'));
+
     game = RecycleRush();
   }
 
-  // TODO fit height
   @override
   Widget build(BuildContext context) {
+    var size = MediaQuery.of(context).size;
+    if (size.width < 532) {
+      gameWidth = size.width - 32; // 32 is the padding
+    } else {
+      gameWidth = maxLength;
+    }
+    if (size.height < 532) {
+      gameHeight = size.height - 32; // 32 is the padding
+    } else {
+      gameHeight = maxLength;
+    }
+    itemGutter = gameWidth * itemGutterRatio;
+    itemSize = (horizontalItemsCount > verticalItemsCount)
+        ? (gameWidth - (itemGutter * verticalItemsCount)) / horizontalItemsCount
+        : (gameWidth - (itemGutter * horizontalItemsCount)) /
+            verticalItemsCount;
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -47,31 +66,30 @@ class _GameAppState extends State<GameApp> {
                 goul: game.goul,
                 moves: game.moves,
                 points: game.points,
+                screenSize: size,
+              ),
+              const SizedBox(
+                height: 20,
               ),
               Expanded(
-                child: Center(
+                child: Align(
+                  alignment: Alignment.topCenter,
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(8.0),
                     child: SizedBox(
                       width: gameWidth,
-                      height: gameWidth,
+                      height: gameHeight,
                       child: GameWidget(
                         game: game,
                         overlayBuilderMap: {
-                          PlayState.welcome.name: (context, RecycleRush game) =>
+                          PlayState.loading.name: (context, RecycleRush game) =>
                               Center(
                                 child: SizedBox(
                                   width: gameWidth,
-                                  height: gameWidth,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      setState(() {});
-                                      game.startGame();
-                                    },
-                                    child: const OverlayScreen(
-                                      title: 'TAP TO PLAY',
-                                      subtitle: '',
-                                    ),
+                                  height: gameHeight,
+                                  child: const OverlayScreen(
+                                    title: 'Loading',
+                                    subtitle: '',
                                   ),
                                 ),
                               ),
@@ -79,7 +97,7 @@ class _GameAppState extends State<GameApp> {
                               (context, RecycleRush game) => Center(
                                     child: SizedBox(
                                       width: gameWidth,
-                                      height: gameWidth,
+                                      height: gameHeight,
                                       child: GestureDetector(
                                         onTap: () {
                                           setState(() {});
@@ -96,7 +114,7 @@ class _GameAppState extends State<GameApp> {
                               Center(
                                 child: SizedBox(
                                   width: gameWidth,
-                                  height: gameWidth,
+                                  height: gameHeight,
                                   child: GestureDetector(
                                     onTap: () {
                                       setState(() {});

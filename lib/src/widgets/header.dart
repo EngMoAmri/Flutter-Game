@@ -1,17 +1,31 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 
-class Header extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:flutter_game/src/widgets/stars_widgets.dart';
+
+class Header extends StatefulWidget {
   const Header({
     super.key,
     required this.goul,
     required this.moves,
     required this.points,
+    required this.screenSize,
   });
 
   final ValueNotifier<int> goul;
   final ValueNotifier<int> moves;
   final ValueNotifier<int> points;
+  final Size screenSize;
+  // TODO reset these on new game
+  static bool star1Played = false;
+  static bool star2Played = false;
+  static bool star3Played = false;
 
+  @override
+  State<Header> createState() => _HeaderState();
+}
+
+class _HeaderState extends State<Header> {
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -35,27 +49,120 @@ class Header extends StatelessWidget {
                       Row(
                         children: [
                           Expanded(child: Container()),
-                          Image.asset('assets/icons/star_off.png', width: 36),
+                          ValueListenableBuilder<int>(
+                              valueListenable: widget.goul,
+                              builder: (context, goul, child) {
+                                return ValueListenableBuilder<int>(
+                                    valueListenable: widget.points,
+                                    builder: (context, points, child) {
+                                      // TODO different ratio for different level
+                                      if ((widget.points.value /
+                                                  widget.goul.value) >=
+                                              0.33 &&
+                                          !Header.star1Played) {
+                                        Future.delayed(
+                                                const Duration(seconds: 1))
+                                            .then((value) {
+                                          Header.star1Played = true;
+                                          setState(() {});
+                                        });
+
+                                        return StarGifWidget(
+                                            screenSize: widget.screenSize);
+                                      } else if ((widget.points.value /
+                                                  widget.goul.value) >=
+                                              0.33 &&
+                                          Header.star1Played) {
+                                        return StarOnWidget(
+                                            screenSize: widget.screenSize);
+                                      } else {
+                                        return StarOffWidget(
+                                            screenSize: widget.screenSize);
+                                      }
+                                    });
+                              }),
                           Expanded(child: Container()),
-                          Image.asset('assets/icons/star_on.png', width: 36),
+                          ValueListenableBuilder<int>(
+                              valueListenable: widget.goul,
+                              builder: (context, goul, child) {
+                                return ValueListenableBuilder<int>(
+                                    valueListenable: widget.points,
+                                    builder: (context, points, child) {
+                                      // TODO different ratio for different level
+                                      if ((widget.points.value /
+                                                  widget.goul.value) >=
+                                              0.66 &&
+                                          !Header.star2Played) {
+                                        Future.delayed(
+                                                const Duration(seconds: 1))
+                                            .then((value) {
+                                          Header.star2Played = true;
+                                          setState(() {});
+                                        });
+
+                                        return StarGifWidget(
+                                            screenSize: widget.screenSize);
+                                      } else if ((widget.points.value /
+                                                  widget.goul.value) >=
+                                              0.66 &&
+                                          Header.star2Played) {
+                                        return StarOnWidget(
+                                            screenSize: widget.screenSize);
+                                      } else {
+                                        return StarOffWidget(
+                                            screenSize: widget.screenSize);
+                                      }
+                                    });
+                              }),
                           Expanded(child: Container()),
-                          Image.asset('assets/icons/star.gif', width: 36),
+                          ValueListenableBuilder<int>(
+                              valueListenable: widget.goul,
+                              builder: (context, goul, child) {
+                                return ValueListenableBuilder<int>(
+                                    valueListenable: widget.points,
+                                    builder: (context, points, child) {
+                                      // TODO different ratio for different level
+                                      if ((widget.points.value /
+                                                  widget.goul.value) >=
+                                              1 &&
+                                          !Header.star3Played) {
+                                        Future.delayed(
+                                                const Duration(seconds: 1))
+                                            .then((value) {
+                                          Header.star3Played = true;
+                                          setState(() {});
+                                        });
+
+                                        return StarGifWidget(
+                                            screenSize: widget.screenSize);
+                                      } else if ((widget.points.value /
+                                                  widget.goul.value) >=
+                                              1 &&
+                                          Header.star3Played) {
+                                        return StarOnWidget(
+                                            screenSize: widget.screenSize);
+                                      } else {
+                                        return StarOffWidget(
+                                            screenSize: widget.screenSize);
+                                      }
+                                    });
+                              }),
                         ],
                       ),
                       const SizedBox(
-                        height: 16,
+                        height: 5,
                       ),
                       ValueListenableBuilder<int>(
-                        valueListenable: goul,
+                        valueListenable: widget.goul,
                         builder: (context, goul, child) {
                           return ValueListenableBuilder<int>(
-                            valueListenable: points,
+                            valueListenable: widget.points,
                             builder: (context, points, child) {
                               return Stack(
                                 alignment: AlignmentDirectional.center,
                                 children: [
                                   Container(
-                                    height: 20,
+                                    height: 18,
                                     decoration: const BoxDecoration(
                                       borderRadius:
                                           BorderRadius.all(Radius.circular(10)),
@@ -120,7 +227,7 @@ class Header extends StatelessWidget {
                     ],
                   ),
                   child: ValueListenableBuilder<int>(
-                    valueListenable: points,
+                    valueListenable: widget.points,
                     builder: (context, points, child) {
                       return Padding(
                         padding: const EdgeInsets.all(8),
@@ -168,12 +275,12 @@ class Header extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(4),
                 child: ValueListenableBuilder<int>(
-                  valueListenable: moves,
+                  valueListenable: widget.moves,
                   builder: (context, moves, child) {
                     return SizedBox(
                       height: 95,
                       child: Padding(
-                        padding: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(16.0),
                         child: FittedBox(
                           fit: BoxFit.fitHeight,
                           child: Text(
