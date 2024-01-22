@@ -81,7 +81,7 @@ class _GameAppState extends State<GameApp> {
                 ),
                 Expanded(child: Container()),
                 Padding(
-                  padding: const EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.all(5.0),
                   child: SizedBox(
                     width: gameWidth,
                     height: gameHeight,
