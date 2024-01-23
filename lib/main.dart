@@ -6,7 +6,7 @@ void main() {
   runApp(const GameApp());
 }
 /// TODO list
-/// - orginze the code in recycle rush
+/// - crash effects
 /// - long crash, super crash
 /// - helps items
 /// - main page

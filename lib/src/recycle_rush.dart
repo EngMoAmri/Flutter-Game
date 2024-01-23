@@ -7,6 +7,8 @@ import 'package:flame/extensions.dart' as ext;
 
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
+import 'package:flame/particles.dart';
+import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
 
 import 'components/components.dart';
@@ -20,6 +22,7 @@ class RecycleRush extends FlameGame {
   List<ItemType> itemsTypes = [];
   List<List<Node?>> board = [];
   List<Item> itemsToRemove = [];
+  late ext.Image itemExplosionImage;
 
   @override
   ext.Color backgroundColor() {
@@ -128,8 +131,8 @@ class RecycleRush extends FlameGame {
       await imagesLoader.load('can.png'),
       await imagesLoader.load('carton.png'),
       await imagesLoader.load('glass.png'),
-      await imagesLoader.load('paper.png'),
-      await imagesLoader.load('plastic.png'),
+      await imagesLoader.load('pan.png'),
+      await imagesLoader.load('bottle.png'),
     ]);
     itemsTypes.addAll([
       ItemType.can,
@@ -146,6 +149,7 @@ class RecycleRush extends FlameGame {
       }
       board.add(rowNodes);
     }
+    itemExplosionImage = await imagesLoader.load('smoke.png');
     startGame();
   }
 
@@ -178,7 +182,7 @@ class RecycleRush extends FlameGame {
           col: col,
         );
         item.priority = 100;
-        var node = Node(nodePosition: position, isUsable: true, item: item);
+        var node = Node(position, isUsable: true, item: item);
 
         items.add(item);
         nodes.add(node);
@@ -307,38 +311,6 @@ class RecycleRush extends FlameGame {
       }
     }
     return matchDirection;
-  }
-
-  /// this function to deal with matches
-  /// TODO make more points and make block bomber, row or colum bomber like candy crash
-  Future<void> processTurnOnMatchBoard(
-      MatchDirection matchDirection, bool subtractMoves) async {
-    for (var itemToRemove in itemsToRemove) {
-      itemToRemove.isMatch = false;
-    }
-    if (matchDirection == MatchDirection.Horizontal ||
-        matchDirection == MatchDirection.Vertical) {
-      AudioPlayer().play(AssetSource('sounds/good.mp3'));
-    } else if (matchDirection == MatchDirection.LongHorizontal ||
-        matchDirection == MatchDirection.LongVertical) {
-      AudioPlayer().play(AssetSource('sounds/better.mp3'));
-    } else {
-      AudioPlayer().play(AssetSource('sounds/super.mp3'));
-    }
-    // removeAndRefill
-    await removeAndRefill(itemsToRemove);
-    processTurn(1, subtractMoves);
-    await Future.delayed(const Duration(milliseconds: 400));
-    var newMatchDirection = await checkBoard();
-    if (newMatchDirection != MatchDirection.None) {
-      await processTurnOnMatchBoard(newMatchDirection, false);
-    }
-    var hasNextMatch = await checkBoardForNextMove();
-    if (!hasNextMatch) {
-      // we need to shuffle the existing items
-      print('we need to shuffle');
-      await shuffleItems();
-    }
   }
 
   /// this will shuffle the items, this method will be called until the next match be existed
@@ -581,11 +553,34 @@ class RecycleRush extends FlameGame {
   /// remove and refill(List of items)
   Future<void> removeAndRefill(List<Item> itemsToRemove) async {
     // removing the items amd clearing the board at that location
+    List<ParticleSystemComponent> explosionsParticles = [];
     for (var item in itemsToRemove) {
-      // remove the item
-      item.parent!.remove(item);
+      explosionsParticles.add(ParticleSystemComponent(
+              priority: item.priority + 1, // to be displayed above the item
+              position: item.position,
+              particle: SpriteAnimationParticle(
+                  size: Vector2.all(80),
+                  animation: SpriteSheet(
+                    image: itemExplosionImage,
+                    srcSize: Vector2.all(500.0),
+                  ).createAnimation(row: 0, stepTime: 0.1)))
+          // ImageParticle(
+          //   // lifespan: 5,
+          //   size: Vector2.all(50),
+          //   image: itemExplosionImage,
+          // )),
+          );
       board[item.row][item.col]!.item = null;
     }
+    // add explosions
+    await world.addAll(explosionsParticles);
+    // wait to the explosions for some time
+    await Future.delayed(const Duration(milliseconds: 300));
+    // remove the explosions
+    world.removeAll(explosionsParticles);
+    // remove the items
+    world.removeAll(itemsToRemove);
+
     // this is my idea to start from bottom
     for (var row = verticalItemsCount - 1; row >= 0; row--) {
       for (var col = horizontalItemsCount - 1; col >= 0; col--) {
@@ -627,6 +622,8 @@ class RecycleRush extends FlameGame {
     if (row - yOffset < 0) {
       // print('reached the top');
       spawnItemAtTop(col);
+      // wait to the item to move to spawn new one
+      await Future.delayed(const Duration(milliseconds: 50));
     }
   }
 
@@ -634,7 +631,7 @@ class RecycleRush extends FlameGame {
   Future<void> spawnItemAtTop(int col) async {
     int nullRow = findLowestNullRow(col);
     int randomItemIndex = rand.nextInt(itemsTypes.length);
-    var targetPosition = board[nullRow][col]!.nodePosition;
+    var targetPosition = board[nullRow][col]!.position;
     var item = Item(
       itemPosition: Vector2(targetPosition.x, -60),
       image: itemsIcons[randomItemIndex],
@@ -657,6 +654,38 @@ class RecycleRush extends FlameGame {
       }
     }
     return lowestRowNull;
+  }
+
+  /// this function to deal with matches
+  /// TODO make more points and make block bomber, row or colum bomber like candy crash
+  Future<void> processTurnOnMatchBoard(
+      MatchDirection matchDirection, bool subtractMoves) async {
+    for (var itemToRemove in itemsToRemove) {
+      itemToRemove.isMatch = false;
+    }
+    if (matchDirection == MatchDirection.Horizontal ||
+        matchDirection == MatchDirection.Vertical) {
+      AudioPlayer().play(AssetSource('sounds/good.mp3'));
+    } else if (matchDirection == MatchDirection.LongHorizontal ||
+        matchDirection == MatchDirection.LongVertical) {
+      AudioPlayer().play(AssetSource('sounds/better.mp3'));
+    } else {
+      AudioPlayer().play(AssetSource('sounds/super.mp3'));
+    }
+    // removeAndRefill
+    await removeAndRefill(itemsToRemove);
+    processTurn(1, subtractMoves);
+    await Future.delayed(const Duration(milliseconds: 400));
+    var newMatchDirection = await checkBoard();
+    if (newMatchDirection != MatchDirection.None) {
+      await processTurnOnMatchBoard(newMatchDirection, false);
+    }
+    var hasNextMatch = await checkBoardForNextMove();
+    if (!hasNextMatch) {
+      // we need to shuffle the existing items
+      print('we need to shuffle');
+      await shuffleItems();
+    }
   }
 
   /// do game calculations like moves, points,...
