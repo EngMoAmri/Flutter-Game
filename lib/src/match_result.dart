@@ -1,8 +1,9 @@
 import 'components/item.dart';
 
 class MatchResult {
-  MatchResult(this.connectedItems, this.direction);
+  MatchResult(this.connectedItems, this.swappedItem, this.direction);
   List<Item> connectedItems;
+  Item? swappedItem;
   MatchDirection direction;
 }
 

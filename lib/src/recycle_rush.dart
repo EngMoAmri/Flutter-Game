@@ -23,7 +23,7 @@ class RecycleRush extends FlameGame {
   Map<String, List<ext.Image>> itemsIcons = {};
   List<ItemType> itemsTypes = [];
   List<List<Node?>> board = [];
-  List<Item> itemsToRemove = [];
+  // List<Item> itemsToRemove = [];
   Item? selectedItem;
   bool isProcessingMove = false;
 
@@ -199,6 +199,21 @@ class RecycleRush extends FlameGame {
               itemSize * ((maxItemInRowAndCol - verticalItemsCount) / 2),
         );
         int randomItemIndex = rand.nextInt(itemsTypes.length);
+        // THis just for testing
+        // // TODO remove
+        // if (row == 0 && col == 2 ||
+        //     row == 1 && col == 2 ||
+        //     row == 2 && col == 1 ||
+        //     row == 3 && col == 2) {
+        //   randomItemIndex = 0;
+        // }
+        // if (row == 0 && col == 1 ||
+        //     row == 1 && col == 1 ||
+        //     row == 2 && col == 2 ||
+        //     row == 3 && col == 1) {
+        //   randomItemIndex = 1;
+        // }
+
         var item = Item(
           itemPosition: position,
           image: itemsIcons[itemsIcons.keys.toList()[randomItemIndex]]![0],
@@ -217,7 +232,7 @@ class RecycleRush extends FlameGame {
       }
     }
 
-    if (await checkBoard() != MatchDirection.None) {
+    if ((await checkBoard(null, null)).isNotEmpty) {
       // we have matches call again
       startGame();
       return;
@@ -246,9 +261,9 @@ class RecycleRush extends FlameGame {
             if (neighborItem != null) {
               // do a test swap to check if there is a match
               _doSwap(item, neighborItem, false);
-              var matchDirection = await checkBoard();
+              var matchDirections = await checkBoard(null, null);
               _doSwap(item, neighborItem, false);
-              if (matchDirection != MatchDirection.None) {
+              if (matchDirections.isNotEmpty) {
                 return true;
               }
             }
@@ -260,9 +275,9 @@ class RecycleRush extends FlameGame {
             if (neighborItem != null) {
               // do a test swap to check if there is a match
               _doSwap(item, neighborItem, false);
-              var matchDirection = await checkBoard();
+              var matchDirections = await checkBoard(null, null);
               _doSwap(item, neighborItem, false);
-              if (matchDirection != MatchDirection.None) {
+              if (matchDirections.isNotEmpty) {
                 return true;
               }
             }
@@ -273,9 +288,9 @@ class RecycleRush extends FlameGame {
             if (neighborItem != null) {
               // do a test swap to check if there is a match
               _doSwap(item, neighborItem, false);
-              var matchDirection = await checkBoard();
+              var matchDirections = await checkBoard(null, null);
               _doSwap(item, neighborItem, false);
-              if (matchDirection != MatchDirection.None) {
+              if (matchDirections.isNotEmpty) {
                 return true;
               }
             }
@@ -287,9 +302,9 @@ class RecycleRush extends FlameGame {
             if (neighborItem != null) {
               // do a test swap to check if there is a match
               _doSwap(item, neighborItem, false);
-              var matchDirection = await checkBoard();
+              var matchDirections = await checkBoard(null, null);
               _doSwap(item, neighborItem, false);
-              if (matchDirection != MatchDirection.None) {
+              if (matchDirections.isNotEmpty) {
                 return true;
               }
             }
@@ -301,18 +316,44 @@ class RecycleRush extends FlameGame {
   }
 
   /// this function to check for matches, it will return the match direction
-  Future<MatchDirection> checkBoard() async {
+  Future<List<MatchResult>> checkBoard(
+      Item? selectedItem, Item? targetItem) async {
     if (playState == PlayState.gameOver ||
         // playState == PlayState.welcome ||
         playState == PlayState.won) {
-      return MatchDirection.None;
+      return [];
     }
-    MatchDirection matchDirection = MatchDirection.None;
-    itemsToRemove.clear();
+    List<MatchResult> matchResults = [];
+    // itemsToRemove.clear();
     // clear matches
     for (var nodeRow in board) {
       for (var node in nodeRow) {
         node?.item?.isMatch = false;
+      }
+    }
+    // first check the items just moved
+    if (selectedItem != null) {
+      var connectionResult = isConnected(selectedItem);
+      if (connectionResult.connectedItems.length >= 3) {
+        // complex matching
+        var superMatchResult = squareMatch(connectionResult);
+        // itemsToRemove.addAll(superMatchResult.connectedItems);
+        for (var connectedItem in superMatchResult.connectedItems) {
+          connectedItem.isMatch = true;
+        }
+        matchResults.add(superMatchResult);
+      }
+    }
+    if (targetItem != null) {
+      var connectionResult = isConnected(targetItem);
+      if (connectionResult.connectedItems.length >= 3) {
+        // complex matching
+        var superMatchResult = squareMatch(connectionResult);
+        // itemsToRemove.addAll(superMatchResult.connectedItems);
+        for (var connectedItem in superMatchResult.connectedItems) {
+          connectedItem.isMatch = true;
+        }
+        matchResults.add(superMatchResult);
       }
     }
     for (var row = 0; row < verticalItemsCount; row++) {
@@ -322,21 +363,22 @@ class RecycleRush extends FlameGame {
 
           // ensure its met matched
           if (!item.isMatch) {
-            MatchResult connectedItemResult = isConnected(item);
-            if (connectedItemResult.connectedItems.length >= 3) {
+            var connectionResult = isConnected(item);
+            if (connectionResult.direction == MatchDirection.None) continue;
+            if (connectionResult.connectedItems.length >= 3) {
               // complex matching
-              MatchResult superMatchResult = squareMatch(connectedItemResult);
-              itemsToRemove.addAll(superMatchResult.connectedItems);
+              var superMatchResult = squareMatch(connectionResult);
+              // itemsToRemove.addAll(superMatchResult.connectedItems);
               for (var connectedItem in superMatchResult.connectedItems) {
                 connectedItem.isMatch = true;
               }
-              matchDirection = superMatchResult.direction;
+              matchResults.add(superMatchResult);
             }
           }
         }
       }
     }
-    return matchDirection;
+    return matchResults;
   }
 
   /// this will shuffle the items, this method will be called until the next match be existed
@@ -362,7 +404,7 @@ class RecycleRush extends FlameGame {
       }
     }
     // the shuffle did'nt work so do it again
-    if (await checkBoard() != MatchDirection.None) {
+    if ((await checkBoard(null, null)).isNotEmpty) {
       return await shuffleItems();
     }
     // move to target
@@ -391,15 +433,15 @@ class RecycleRush extends FlameGame {
 
     //have we make a 3 match horizontal
     if (connectedItems.length == 3) {
-      return MatchResult(connectedItems, MatchDirection.Horizontal);
+      return MatchResult(connectedItems, item, MatchDirection.Horizontal);
     }
     //check if 4 (long horizontal)
     if (connectedItems.length == 4) {
-      return MatchResult(connectedItems, MatchDirection.LongHorizontal);
+      return MatchResult(connectedItems, item, MatchDirection.LongHorizontal);
     }
     //check if 5 or more (super)
     if (connectedItems.length >= 4) {
-      return MatchResult(connectedItems, MatchDirection.Super);
+      return MatchResult(connectedItems, item, MatchDirection.Super);
     }
 
     // clear not connected items
@@ -414,18 +456,18 @@ class RecycleRush extends FlameGame {
 
     //have we make a 3 match vertical
     if (connectedItems.length == 3) {
-      return MatchResult(connectedItems, MatchDirection.Vertical);
+      return MatchResult(connectedItems, item, MatchDirection.Vertical);
     }
 
-//check if 4 (long vertical)
+    //check if 4 (long vertical)
     if (connectedItems.length == 4) {
-      return MatchResult(connectedItems, MatchDirection.LongVertical);
+      return MatchResult(connectedItems, item, MatchDirection.LongVertical);
     }
     //check if 5 or more (super)
     if (connectedItems.length >= 4) {
-      return MatchResult(connectedItems, MatchDirection.Super);
+      return MatchResult(connectedItems, item, MatchDirection.Super);
     }
-    return MatchResult(connectedItems, MatchDirection.None);
+    return MatchResult(connectedItems, item, MatchDirection.None);
   }
 
   /// square match method checker
@@ -444,7 +486,8 @@ class RecycleRush extends FlameGame {
         if (extraConnectedItems.length >= 2) {
           // we have a super horizontal match
           extraConnectedItems.addAll(matchResult.connectedItems);
-          return MatchResult(extraConnectedItems, MatchDirection.Super);
+          return MatchResult(extraConnectedItems, matchResult.swappedItem,
+              MatchDirection.Square);
         }
       }
       return matchResult;
@@ -459,7 +502,8 @@ class RecycleRush extends FlameGame {
         if (extraConnectedItems.length >= 2) {
           // we have a super vertical match
           extraConnectedItems.addAll(matchResult.connectedItems);
-          return MatchResult(extraConnectedItems, MatchDirection.Super);
+          return MatchResult(extraConnectedItems, matchResult.swappedItem,
+              MatchDirection.Square);
         }
       }
       return matchResult;
@@ -535,8 +579,8 @@ class RecycleRush extends FlameGame {
     while (currentItem.isMoving || targetItem.isMoving) {
       await Future.delayed(const Duration(milliseconds: 200));
     }
-    MatchDirection matchDirection = await checkBoard();
-    if (matchDirection == MatchDirection.None) {
+    List<MatchResult> matchResults = await checkBoard(currentItem, targetItem);
+    if (matchResults.isEmpty) {
       await _doSwap(currentItem, targetItem, true);
 
       // this loop to make sure the items has been move
@@ -545,8 +589,11 @@ class RecycleRush extends FlameGame {
       }
     } else {
       // we have a match
-      await processTurnOnMatchBoard(matchDirection, true);
+      await processTurnOnMatchBoard(matchResults, true, selectedItem);
     }
+    // wait some time before resetting variables
+    await Future.delayed(const Duration(milliseconds: 200));
+
     isProcessingMove = false;
     selectedItem = null;
   }
@@ -582,97 +629,113 @@ class RecycleRush extends FlameGame {
 
   /// this function to deal with matches
   /// TODO make more points and make block bomber, row or colum bomber like candy crash
-  Future<void> processTurnOnMatchBoard(
-      MatchDirection matchDirection, bool subtractMoves) async {
-    for (var itemToRemove in itemsToRemove) {
-      itemToRemove.isMatch = false;
-    }
-    if (matchDirection == MatchDirection.Horizontal ||
-        matchDirection == MatchDirection.Vertical) {
-      AudioPlayer().play(AssetSource('sounds/good.mp3'));
-    } else if (matchDirection == MatchDirection.LongHorizontal ||
-        matchDirection == MatchDirection.LongVertical) {
-      AudioPlayer().play(AssetSource('sounds/better.mp3'));
-    } else {
-      // TODO sound for square
-      AudioPlayer().play(AssetSource('sounds/super.mp3'));
+  Future<void> processTurnOnMatchBoard(List<MatchResult> matchResults,
+      bool subtractMoves, Item? selectedItem) async {
+    //     List<> allMatchResultsItems = [];
+    // for (var itemToRemove in itemsToRemove) {
+    //   itemToRemove.isMatch = false;
+    // }
+    for (var matchResult in matchResults) {
+      if (matchResult.direction == MatchDirection.Horizontal ||
+          matchResult.direction == MatchDirection.Vertical) {
+        AudioPlayer().play(AssetSource('sounds/good.mp3'));
+      } else if (matchResult.direction == MatchDirection.LongHorizontal ||
+          matchResult.direction == MatchDirection.LongVertical) {
+        AudioPlayer().play(AssetSource('sounds/better.mp3'));
+      } else {
+        // TODO sound for square
+        AudioPlayer().play(AssetSource('sounds/super.mp3'));
+      }
     }
     // removeAndRefill
-    await removeAndRefill(itemsToRemove, matchDirection);
+    await removeAndRefill(matchResults);
     processTurn(1, subtractMoves); //TODO
     await Future.delayed(const Duration(milliseconds: 400));
-    var newMatchDirection = await checkBoard();
-    if (newMatchDirection != MatchDirection.None) {
-      await processTurnOnMatchBoard(newMatchDirection, false);
+    var newMatchDirections = await checkBoard(null, null);
+    if (newMatchDirections.isNotEmpty) {
+      await processTurnOnMatchBoard(
+          newMatchDirections, false, null); // here there is no select item
     }
     var hasNextMatch = await checkBoardForNextMove();
     if (!hasNextMatch) {
       // we need to shuffle the existing items
-      print('we need to shuffle');
       await shuffleItems();
     }
   }
 
   /// cascading items
   /// remove and refill(List of items)
-  Future<void> removeAndRefill(
-      List<Item> itemsToRemove, MatchDirection matchDirection) async {
+  Future<void> removeAndRefill(List<MatchResult> matchResults) async {
     // removing the items amd clearing the board at that location
     // first we add all particles to a list to show them at the same time
     List<ParticleSystemComponent> explosionsParticles = [];
-    for (var item in itemsToRemove) {
-      explosionsParticles.add(ParticleSystemComponent(
-          priority: item.priority + 1, // to be displayed above the item
-          position: item.position,
-          particle: SpriteAnimationParticle(
-              size: Vector2.all(80),
-              animation: SpriteSheet(
-                image: itemExplosionImage,
-                srcSize: Vector2.all(500.0),
-              ).createAnimation(row: 0, stepTime: 0.1))));
-    }
     // add explosions
     await world.addAll(explosionsParticles);
     // wait to the explosions for some time
     await Future.delayed(const Duration(milliseconds: 300));
     // remove the explosions
     world.removeAll(explosionsParticles);
-    // TODO below is not correct first if selected item is null random place the new item or find a better solution
-    // change the selected Item if there is long match or super
-    if (matchDirection == MatchDirection.LongHorizontal) {
-      // don't remove the selected item
-      itemsToRemove.remove(selectedItem);
-      // instead change its type of power
-      selectedItem!.powerType = PowerType.col;
-      selectedItem!.sprite = Sprite(itemsIcons[selectedItem!.type.name]![1]);
-    } else if (matchDirection == MatchDirection.LongVertical) {
-      // don't remove the selected item
-      itemsToRemove.remove(selectedItem);
-      // instead change its type of power
-      selectedItem!.powerType = PowerType.row;
-      selectedItem!.sprite = Sprite(itemsIcons[selectedItem!.type.name]![2]);
-    } else if (matchDirection == MatchDirection.Square) {
-      // don't remove the selected item
-      itemsToRemove.remove(selectedItem);
-      // instead change its type of power
-      selectedItem!.powerType = PowerType.square;
-      // TODO square icons
-      selectedItem!.sprite = Sprite(itemsIcons[selectedItem!.type.name]![1]);
-    } else if (matchDirection == MatchDirection.Super) {
-      // don't remove the selected item
-      itemsToRemove.remove(selectedItem);
-      // instead change its type of power
-      selectedItem!.powerType = PowerType.type;
-      // TODO super icons
-      selectedItem!.sprite = Sprite(itemsIcons[selectedItem!.type.name]![1]);
+    for (var matchResult in matchResults) {
+      for (var item in matchResult.connectedItems) {
+        explosionsParticles.add(ParticleSystemComponent(
+            priority: item.priority + 1, // to be displayed above the item
+            position: item.position,
+            particle: SpriteAnimationParticle(
+                size: Vector2.all(80),
+                animation: SpriteSheet(
+                  image: itemExplosionImage,
+                  srcSize: Vector2.all(500.0),
+                ).createAnimation(row: 0, stepTime: 0.1))));
+      }
+      List<Item> itemsToRemove = [];
+      itemsToRemove.addAll(matchResult.connectedItems);
+      if (matchResult.swappedItem == null) {
+        for (var item in itemsToRemove) {
+          board[item.row][item.col]!.item = null;
+        }
+        // remove the items
+        world.removeAll(itemsToRemove);
+        continue;
+      }
+      // TODO below is not correct first if selected item is null random place the new item or find a better solution
+      // change the selected Item if there is long match or super
+      if (matchResult.direction == MatchDirection.LongHorizontal) {
+        // don't remove the selected item
+        itemsToRemove.remove(matchResult.swappedItem);
+        // instead change its type of power
+        matchResult.swappedItem!.powerType = PowerType.col;
+        matchResult.swappedItem!.sprite =
+            Sprite(itemsIcons[matchResult.swappedItem!.type.name]![1]);
+      } else if (matchResult.direction == MatchDirection.LongVertical) {
+        // don't remove the selected item
+        itemsToRemove.remove(matchResult.swappedItem);
+        // instead change its type of power
+        matchResult.swappedItem!.powerType = PowerType.row;
+        matchResult.swappedItem!.sprite =
+            Sprite(itemsIcons[matchResult.swappedItem!.type.name]![2]);
+      } else if (matchResult.direction == MatchDirection.Square) {
+        // don't remove the selected item
+        itemsToRemove.remove(matchResult.swappedItem!);
+        // instead change its type of power
+        matchResult.swappedItem!.powerType = PowerType.square;
+        // TODO square icons
+        matchResult.swappedItem!.sprite =
+            Sprite(itemsIcons[matchResult.swappedItem!.type.name]![1]);
+      } else if (matchResult.direction == MatchDirection.Super) {
+        // don't remove the selected item
+        itemsToRemove.remove(matchResult.swappedItem!);
+        // instead change its type of power
+        matchResult.swappedItem!.powerType = PowerType.type;
+        // TODO super icons
+        matchResult.swappedItem!.sprite =
+            Sprite(itemsIcons[matchResult.swappedItem!.type.name]![1]);
+      }
+      for (var item in itemsToRemove) {
+        board[item.row][item.col]!.item = null;
+      }
+      // remove the items
+      world.removeAll(itemsToRemove);
     }
-    for (var item in itemsToRemove) {
-      board[item.row][item.col]!.item = null;
-    }
-
-    // remove the items
-    world.removeAll(itemsToRemove);
-
     // this is my idea to start from bottom
     for (var row = verticalItemsCount - 1; row >= 0; row--) {
       for (var col = horizontalItemsCount - 1; col >= 0; col--) {
