@@ -666,15 +666,10 @@ class RecycleRush extends FlameGame {
   /// cascading items
   /// remove and refill(List of items)
   Future<void> removeAndRefill(List<MatchResult> matchResults) async {
+    List<Item> itemsToRemove = [];
     // removing the items amd clearing the board at that location
     // first we add all particles to a list to show them at the same time
     List<ParticleSystemComponent> explosionsParticles = [];
-    // add explosions
-    await world.addAll(explosionsParticles);
-    // wait to the explosions for some time
-    await Future.delayed(const Duration(milliseconds: 300));
-    // remove the explosions
-    world.removeAll(explosionsParticles);
     for (var matchResult in matchResults) {
       for (var item in matchResult.connectedItems) {
         explosionsParticles.add(ParticleSystemComponent(
@@ -687,14 +682,11 @@ class RecycleRush extends FlameGame {
                   srcSize: Vector2.all(500.0),
                 ).createAnimation(row: 0, stepTime: 0.1))));
       }
-      List<Item> itemsToRemove = [];
       itemsToRemove.addAll(matchResult.connectedItems);
       if (matchResult.swappedItem == null) {
         for (var item in itemsToRemove) {
           board[item.row][item.col]!.item = null;
         }
-        // remove the items
-        world.removeAll(itemsToRemove);
         continue;
       }
       // TODO below is not correct first if selected item is null random place the new item or find a better solution
@@ -733,9 +725,15 @@ class RecycleRush extends FlameGame {
       for (var item in itemsToRemove) {
         board[item.row][item.col]!.item = null;
       }
-      // remove the items
-      world.removeAll(itemsToRemove);
     }
+    // add explosions
+    await world.addAll(explosionsParticles);
+    // wait to the explosions for some time
+    await Future.delayed(const Duration(milliseconds: 300));
+    // remove the explosions
+    world.removeAll(explosionsParticles);
+    // remove the items
+    world.removeAll(itemsToRemove);
     // this is my idea to start from bottom
     for (var row = verticalItemsCount - 1; row >= 0; row--) {
       for (var col = horizontalItemsCount - 1; col >= 0; col--) {

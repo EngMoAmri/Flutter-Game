@@ -11,3 +11,4 @@ void main() {
 /// - main page
 /// - levels
 /// - fix height less than the required
+/// - moves font size on large width
