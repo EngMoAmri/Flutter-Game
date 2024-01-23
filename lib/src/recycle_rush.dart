@@ -18,10 +18,15 @@ import 'match_result.dart';
 enum PlayState { loading, playing, gameOver, won } // Add this enumeration
 
 class RecycleRush extends FlameGame {
-  List<ext.Image> itemsIcons = [];
+  /// the [key] is for the type name
+  /// the [list] is for all related icons
+  Map<String, List<ext.Image>> itemsIcons = {};
   List<ItemType> itemsTypes = [];
   List<List<Node?>> board = [];
   List<Item> itemsToRemove = [];
+  Item? selectedItem;
+  bool isProcessingMove = false;
+
   late ext.Image itemExplosionImage;
 
   @override
@@ -127,19 +132,39 @@ class RecycleRush extends FlameGame {
     camera.viewfinder.anchor = Anchor.topLeft;
     final imagesLoader = Images();
 
-    itemsIcons.addAll([
-      await imagesLoader.load('can.png'),
-      await imagesLoader.load('carton.png'),
-      await imagesLoader.load('glass.png'),
-      await imagesLoader.load('pan.png'),
-      await imagesLoader.load('bottle.png'),
-    ]);
+    itemsIcons.addAll({
+      'can': [
+        await imagesLoader.load('can.png'),
+        await imagesLoader.load('can-col.png'),
+        await imagesLoader.load('can-row.png'),
+      ],
+      'carton': [
+        await imagesLoader.load('carton.png'),
+        await imagesLoader.load('carton-col.png'),
+        await imagesLoader.load('carton-row.png'),
+      ],
+      'glass': [
+        await imagesLoader.load('glass.png'),
+        await imagesLoader.load('glass-row.png'),
+        await imagesLoader.load('glass-row.png'),
+      ],
+      'pan': [
+        await imagesLoader.load('pan.png'),
+        await imagesLoader.load('pan-col.png'),
+        await imagesLoader.load('pan-row.png'),
+      ],
+      'bottle': [
+        await imagesLoader.load('bottle.png'),
+        await imagesLoader.load('bottle-col.png'),
+        await imagesLoader.load('bottle-row.png'),
+      ],
+    });
     itemsTypes.addAll([
       ItemType.can,
-      ItemType.cartoon,
+      ItemType.carton,
       ItemType.glass,
-      ItemType.paper,
-      ItemType.plastic,
+      ItemType.pan,
+      ItemType.bottle,
     ]);
     // initialize the board
     for (var row = 0; row < verticalItemsCount; row++) {
@@ -176,8 +201,9 @@ class RecycleRush extends FlameGame {
         int randomItemIndex = rand.nextInt(itemsTypes.length);
         var item = Item(
           itemPosition: position,
-          image: itemsIcons[randomItemIndex],
+          image: itemsIcons[itemsIcons.keys.toList()[randomItemIndex]]![0],
           type: itemsTypes[randomItemIndex],
+          powerType: PowerType.none,
           row: row,
           col: col,
         );
@@ -299,7 +325,7 @@ class RecycleRush extends FlameGame {
             MatchResult connectedItemResult = isConnected(item);
             if (connectedItemResult.connectedItems.length >= 3) {
               // complex matching
-              MatchResult superMatchResult = superMatch(connectedItemResult);
+              MatchResult superMatchResult = squareMatch(connectedItemResult);
               itemsToRemove.addAll(superMatchResult.connectedItems);
               for (var connectedItem in superMatchResult.connectedItems) {
                 connectedItem.isMatch = true;
@@ -365,13 +391,15 @@ class RecycleRush extends FlameGame {
 
     //have we make a 3 match horizontal
     if (connectedItems.length == 3) {
-      // print('3 match horrizontally ${itemType.name}');
       return MatchResult(connectedItems, MatchDirection.Horizontal);
     }
-    //check more than 3 (long horizontal)
-    if (connectedItems.length > 3) {
-      // print('more 3 match horrizontally ${itemType.name}');
+    //check if 4 (long horizontal)
+    if (connectedItems.length == 4) {
       return MatchResult(connectedItems, MatchDirection.LongHorizontal);
+    }
+    //check if 5 or more (super)
+    if (connectedItems.length >= 4) {
+      return MatchResult(connectedItems, MatchDirection.Super);
     }
 
     // clear not connected items
@@ -386,21 +414,26 @@ class RecycleRush extends FlameGame {
 
     //have we make a 3 match vertical
     if (connectedItems.length == 3) {
-      // print('3 match vertically ${itemType.name}');
       return MatchResult(connectedItems, MatchDirection.Vertical);
     }
 
-    //check more than 3 (long vertical)
-    if (connectedItems.length > 3) {
-      // print('more than 3 match vertically ${itemType.name}');
+//check if 4 (long vertical)
+    if (connectedItems.length == 4) {
       return MatchResult(connectedItems, MatchDirection.LongVertical);
+    }
+    //check if 5 or more (super)
+    if (connectedItems.length >= 4) {
+      return MatchResult(connectedItems, MatchDirection.Super);
     }
     return MatchResult(connectedItems, MatchDirection.None);
   }
 
-  /// super match method checker
-  /// TODO implement only if it's one row or column
-  MatchResult superMatch(MatchResult matchResult) {
+  /// square match method checker
+  MatchResult squareMatch(MatchResult matchResult) {
+    // if we met the super match there is no need to make a square match check
+    if (matchResult.direction == MatchDirection.Super) {
+      return matchResult;
+    }
     // if we have a horizontal or long horizontal match
     if (matchResult.direction == MatchDirection.Horizontal ||
         matchResult.direction == MatchDirection.LongHorizontal) {
@@ -437,8 +470,8 @@ class RecycleRush extends FlameGame {
   /// set items connected to item
   checkDirection(Item item, int xDir, int yDir, List<Item> connectedItems) {
     ItemType itemType = item.type;
-    int row = item.row + xDir;
-    int col = item.col + yDir;
+    int row = item.row + yDir;
+    int col = item.col + xDir;
 
     // check we within thhe boudries
     while (col >= 0 &&
@@ -450,8 +483,8 @@ class RecycleRush extends FlameGame {
         // does the type is match and not matched before
         if (!neighborItem.isMatch && neighborItem.type == itemType) {
           connectedItems.add(neighborItem);
-          row += xDir;
-          col += yDir;
+          row += yDir;
+          col += xDir;
         } else {
           break;
         }
@@ -459,12 +492,10 @@ class RecycleRush extends FlameGame {
     }
   }
 
-  /// Swapping item part
-  Item? selectedItem;
-  bool isProcessingMove = false;
-
   /// Select item by first place the drag started
   void selectItem(Item item) {
+    // prevent change the selected item if there is movement
+    if (isProcessingMove) return;
     // if we don't have an item selected set the new one
     if (selectedItem == null) {
       selectedItem = item;
@@ -549,28 +580,56 @@ class RecycleRush extends FlameGame {
         1;
   }
 
+  /// this function to deal with matches
+  /// TODO make more points and make block bomber, row or colum bomber like candy crash
+  Future<void> processTurnOnMatchBoard(
+      MatchDirection matchDirection, bool subtractMoves) async {
+    for (var itemToRemove in itemsToRemove) {
+      itemToRemove.isMatch = false;
+    }
+    if (matchDirection == MatchDirection.Horizontal ||
+        matchDirection == MatchDirection.Vertical) {
+      AudioPlayer().play(AssetSource('sounds/good.mp3'));
+    } else if (matchDirection == MatchDirection.LongHorizontal ||
+        matchDirection == MatchDirection.LongVertical) {
+      AudioPlayer().play(AssetSource('sounds/better.mp3'));
+    } else {
+      // TODO sound for square
+      AudioPlayer().play(AssetSource('sounds/super.mp3'));
+    }
+    // removeAndRefill
+    await removeAndRefill(itemsToRemove, matchDirection);
+    processTurn(1, subtractMoves); //TODO
+    await Future.delayed(const Duration(milliseconds: 400));
+    var newMatchDirection = await checkBoard();
+    if (newMatchDirection != MatchDirection.None) {
+      await processTurnOnMatchBoard(newMatchDirection, false);
+    }
+    var hasNextMatch = await checkBoardForNextMove();
+    if (!hasNextMatch) {
+      // we need to shuffle the existing items
+      print('we need to shuffle');
+      await shuffleItems();
+    }
+  }
+
   /// cascading items
   /// remove and refill(List of items)
-  Future<void> removeAndRefill(List<Item> itemsToRemove) async {
+  Future<void> removeAndRefill(
+      List<Item> itemsToRemove, MatchDirection matchDirection) async {
     // removing the items amd clearing the board at that location
+    // first we add all particles to a list to show them at the same time
     List<ParticleSystemComponent> explosionsParticles = [];
     for (var item in itemsToRemove) {
       explosionsParticles.add(ParticleSystemComponent(
-              priority: item.priority + 1, // to be displayed above the item
-              position: item.position,
-              particle: SpriteAnimationParticle(
-                  size: Vector2.all(80),
-                  animation: SpriteSheet(
-                    image: itemExplosionImage,
-                    srcSize: Vector2.all(500.0),
-                  ).createAnimation(row: 0, stepTime: 0.1)))
-          // ImageParticle(
-          //   // lifespan: 5,
-          //   size: Vector2.all(50),
-          //   image: itemExplosionImage,
-          // )),
-          );
-      board[item.row][item.col]!.item = null;
+          priority: item.priority + 1, // to be displayed above the item
+          position: item.position,
+          particle: SpriteAnimationParticle(
+              size: Vector2.all(80),
+              animation: SpriteSheet(
+                image: itemExplosionImage,
+                srcSize: Vector2.all(500.0),
+              ).createAnimation(row: 0, stepTime: 0.1))));
     }
     // add explosions
     await world.addAll(explosionsParticles);
@@ -578,6 +637,39 @@ class RecycleRush extends FlameGame {
     await Future.delayed(const Duration(milliseconds: 300));
     // remove the explosions
     world.removeAll(explosionsParticles);
+    // TODO below is not correct first if selected item is null random place the new item or find a better solution
+    // change the selected Item if there is long match or super
+    if (matchDirection == MatchDirection.LongHorizontal) {
+      // don't remove the selected item
+      itemsToRemove.remove(selectedItem);
+      // instead change its type of power
+      selectedItem!.powerType = PowerType.col;
+      selectedItem!.sprite = Sprite(itemsIcons[selectedItem!.type.name]![1]);
+    } else if (matchDirection == MatchDirection.LongVertical) {
+      // don't remove the selected item
+      itemsToRemove.remove(selectedItem);
+      // instead change its type of power
+      selectedItem!.powerType = PowerType.row;
+      selectedItem!.sprite = Sprite(itemsIcons[selectedItem!.type.name]![2]);
+    } else if (matchDirection == MatchDirection.Square) {
+      // don't remove the selected item
+      itemsToRemove.remove(selectedItem);
+      // instead change its type of power
+      selectedItem!.powerType = PowerType.square;
+      // TODO square icons
+      selectedItem!.sprite = Sprite(itemsIcons[selectedItem!.type.name]![1]);
+    } else if (matchDirection == MatchDirection.Super) {
+      // don't remove the selected item
+      itemsToRemove.remove(selectedItem);
+      // instead change its type of power
+      selectedItem!.powerType = PowerType.type;
+      // TODO super icons
+      selectedItem!.sprite = Sprite(itemsIcons[selectedItem!.type.name]![1]);
+    }
+    for (var item in itemsToRemove) {
+      board[item.row][item.col]!.item = null;
+    }
+
     // remove the items
     world.removeAll(itemsToRemove);
 
@@ -634,8 +726,9 @@ class RecycleRush extends FlameGame {
     var targetPosition = board[nullRow][col]!.position;
     var item = Item(
       itemPosition: Vector2(targetPosition.x, -60),
-      image: itemsIcons[randomItemIndex],
+      image: itemsIcons[itemsIcons.keys.toList()[randomItemIndex]]![0],
       type: itemsTypes[randomItemIndex],
+      powerType: PowerType.none,
       row: nullRow,
       col: col,
     );
@@ -654,38 +747,6 @@ class RecycleRush extends FlameGame {
       }
     }
     return lowestRowNull;
-  }
-
-  /// this function to deal with matches
-  /// TODO make more points and make block bomber, row or colum bomber like candy crash
-  Future<void> processTurnOnMatchBoard(
-      MatchDirection matchDirection, bool subtractMoves) async {
-    for (var itemToRemove in itemsToRemove) {
-      itemToRemove.isMatch = false;
-    }
-    if (matchDirection == MatchDirection.Horizontal ||
-        matchDirection == MatchDirection.Vertical) {
-      AudioPlayer().play(AssetSource('sounds/good.mp3'));
-    } else if (matchDirection == MatchDirection.LongHorizontal ||
-        matchDirection == MatchDirection.LongVertical) {
-      AudioPlayer().play(AssetSource('sounds/better.mp3'));
-    } else {
-      AudioPlayer().play(AssetSource('sounds/super.mp3'));
-    }
-    // removeAndRefill
-    await removeAndRefill(itemsToRemove);
-    processTurn(1, subtractMoves);
-    await Future.delayed(const Duration(milliseconds: 400));
-    var newMatchDirection = await checkBoard();
-    if (newMatchDirection != MatchDirection.None) {
-      await processTurnOnMatchBoard(newMatchDirection, false);
-    }
-    var hasNextMatch = await checkBoardForNextMove();
-    if (!hasNextMatch) {
-      // we need to shuffle the existing items
-      print('we need to shuffle');
-      await shuffleItems();
-    }
   }
 
   /// do game calculations like moves, points,...

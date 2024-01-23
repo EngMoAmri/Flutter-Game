@@ -6,7 +6,6 @@ void main() {
   runApp(const GameApp());
 }
 /// TODO list
-/// - crash effects
 /// - long crash, super crash
 /// - helps items
 /// - main page

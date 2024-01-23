@@ -5,12 +5,16 @@ import 'package:flame/extensions.dart';
 import 'package:flutter_game/src/config.dart';
 import 'package:flutter_game/src/recycle_rush.dart';
 
-enum ItemType { can, cartoon, glass, paper, plastic }
+enum ItemType { can, carton, glass, pan, bottle }
+
+/// destroy type
+enum PowerType { row, col, square, type, none }
 
 class Item extends SpriteComponent with DragCallbacks, HasGameRef<RecycleRush> {
   Item(
       {required this.image,
       required this.type,
+      required this.powerType,
       required this.row,
       required this.col,
       required this.itemPosition})
@@ -18,8 +22,9 @@ class Item extends SpriteComponent with DragCallbacks, HasGameRef<RecycleRush> {
           position: itemPosition,
           anchor: Anchor.center,
         );
-  final Image image;
+  Image image;
   final ItemType type;
+  PowerType powerType;
   int row;
   int col;
   bool isMatch = false;
@@ -38,8 +43,6 @@ class Item extends SpriteComponent with DragCallbacks, HasGameRef<RecycleRush> {
     size = Vector2(itemSize, itemSize);
     sprite = Sprite(
       image,
-      // srcPosition: currentPosition,
-      // srcSize: Vector2(256.0, 256.0),
     );
   }
 

@@ -11,6 +11,7 @@ enum MatchDirection {
   Horizontal,
   LongVertical,
   LongHorizontal,
+  Square,
   Super,
   None
 }
