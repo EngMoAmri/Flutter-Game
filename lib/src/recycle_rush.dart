@@ -28,7 +28,6 @@ class RecycleRush extends FlameGame {
   bool isProcessingMove = false;
 
   late ext.Image itemExplosionImage;
-
   @override
   ext.Color backgroundColor() {
     // remove background black color
@@ -137,26 +136,34 @@ class RecycleRush extends FlameGame {
         await imagesLoader.load('can.png'),
         await imagesLoader.load('can-col.png'),
         await imagesLoader.load('can-row.png'),
+        await imagesLoader.load('can-square.png'),
       ],
       'carton': [
         await imagesLoader.load('carton.png'),
         await imagesLoader.load('carton-col.png'),
         await imagesLoader.load('carton-row.png'),
+        await imagesLoader.load('carton-square.png'),
       ],
       'glass': [
         await imagesLoader.load('glass.png'),
         await imagesLoader.load('glass-row.png'),
         await imagesLoader.load('glass-row.png'),
+        await imagesLoader.load('glass-square.png'),
       ],
       'pan': [
         await imagesLoader.load('pan.png'),
         await imagesLoader.load('pan-col.png'),
         await imagesLoader.load('pan-row.png'),
+        await imagesLoader.load('pan-square.png'),
       ],
       'bottle': [
         await imagesLoader.load('bottle.png'),
         await imagesLoader.load('bottle-col.png'),
         await imagesLoader.load('bottle-row.png'),
+        await imagesLoader.load('bottle-square.png'),
+      ],
+      'super': [
+        await imagesLoader.load('grenade.png'),
       ],
     });
     itemsTypes.addAll([
@@ -186,7 +193,6 @@ class RecycleRush extends FlameGame {
     moves.value = 100; // TODO foreach level
     List<Node> nodes = [];
     List<Item> items = [];
-
     for (var row = 0; row < verticalItemsCount; row++) {
       for (var col = 0; col < horizontalItemsCount; col++) {
         // if (!(board[row][col]!.isUsable)) continue;
@@ -198,21 +204,22 @@ class RecycleRush extends FlameGame {
               row * itemGutter +
               itemSize * ((maxItemInRowAndCol - verticalItemsCount) / 2),
         );
-        int randomItemIndex = rand.nextInt(itemsTypes.length);
+        int randomItemIndex = rand.nextInt(itemsTypes.length - 1);
         // THis just for testing
         // // TODO remove
-        // if (row == 0 && col == 2 ||
-        //     row == 1 && col == 2 ||
-        //     row == 2 && col == 1 ||
-        //     row == 3 && col == 2) {
-        //   randomItemIndex = 0;
-        // }
-        // if (row == 0 && col == 1 ||
-        //     row == 1 && col == 1 ||
-        //     row == 2 && col == 2 ||
-        //     row == 3 && col == 1) {
-        //   randomItemIndex = 1;
-        // }
+        if (row == 0 && col == 2 ||
+            row == 1 && col == 2 ||
+            row == 2 && col == 1 ||
+            row == 2 && col == 3 ||
+            row == 2 && col == 4) {
+          randomItemIndex = 0;
+        }
+        if (row == 0 && col == 1 ||
+            row == 1 && col == 1 ||
+            row == 2 && col == 2 ||
+            row == 3 && col == 1) {
+          randomItemIndex = 1;
+        }
 
         var item = Item(
           itemPosition: position,
@@ -336,24 +343,23 @@ class RecycleRush extends FlameGame {
       var connectionResult = isConnected(selectedItem);
       if (connectionResult.connectedItems.length >= 3) {
         // complex matching
-        var superMatchResult = squareMatch(connectionResult);
-        // itemsToRemove.addAll(superMatchResult.connectedItems);
-        for (var connectedItem in superMatchResult.connectedItems) {
+        var complexMatchResult = complexMatch(connectionResult);
+        for (var connectedItem in complexMatchResult.connectedItems) {
           connectedItem.isMatch = true;
         }
-        matchResults.add(superMatchResult);
+        matchResults.add(complexMatchResult);
       }
     }
     if (targetItem != null) {
       var connectionResult = isConnected(targetItem);
       if (connectionResult.connectedItems.length >= 3) {
         // complex matching
-        var superMatchResult = squareMatch(connectionResult);
+        var complexMatchResult = complexMatch(connectionResult);
         // itemsToRemove.addAll(superMatchResult.connectedItems);
-        for (var connectedItem in superMatchResult.connectedItems) {
+        for (var connectedItem in complexMatchResult.connectedItems) {
           connectedItem.isMatch = true;
         }
-        matchResults.add(superMatchResult);
+        matchResults.add(complexMatchResult);
       }
     }
     for (var row = 0; row < verticalItemsCount; row++) {
@@ -367,12 +373,12 @@ class RecycleRush extends FlameGame {
             if (connectionResult.direction == MatchDirection.None) continue;
             if (connectionResult.connectedItems.length >= 3) {
               // complex matching
-              var superMatchResult = squareMatch(connectionResult);
+              var complexMatchResult = complexMatch(connectionResult);
               // itemsToRemove.addAll(superMatchResult.connectedItems);
-              for (var connectedItem in superMatchResult.connectedItems) {
+              for (var connectedItem in complexMatchResult.connectedItems) {
                 connectedItem.isMatch = true;
               }
-              matchResults.add(superMatchResult);
+              matchResults.add(complexMatchResult);
             }
           }
         }
@@ -423,57 +429,82 @@ class RecycleRush extends FlameGame {
 
   /// this method will return the connected items connected to one
   MatchResult isConnected(Item item) {
-    List<Item> connectedItems = [];
+    List<Item> horizontalConnectedItems = [];
 
-    connectedItems.add(item);
+    horizontalConnectedItems.add(item);
     //check right
-    checkDirection(item, 1, 0, connectedItems);
+    checkDirection(item, 1, 0, horizontalConnectedItems);
     //check left
-    checkDirection(item, -1, 0, connectedItems);
+    checkDirection(item, -1, 0, horizontalConnectedItems);
 
-    //have we make a 3 match horizontal
-    if (connectedItems.length == 3) {
-      return MatchResult(connectedItems, item, MatchDirection.Horizontal);
-    }
-    //check if 4 (long horizontal)
-    if (connectedItems.length == 4) {
-      return MatchResult(connectedItems, item, MatchDirection.LongHorizontal);
-    }
-    //check if 5 or more (super)
-    if (connectedItems.length >= 4) {
-      return MatchResult(connectedItems, item, MatchDirection.Super);
-    }
+    List<Item> verticalConnectedItems = [];
 
     // clear not connected items
-    connectedItems.clear();
+    verticalConnectedItems.clear();
     // readd initial item
-    connectedItems.add(item);
+    verticalConnectedItems.add(item);
     //check up
-    checkDirection(item, 0, 1, connectedItems);
+    checkDirection(item, 0, 1, verticalConnectedItems);
 
     //check down
-    checkDirection(item, 0, -1, connectedItems);
+    checkDirection(item, 0, -1, verticalConnectedItems);
 
-    //have we make a 3 match vertical
-    if (connectedItems.length == 3) {
-      return MatchResult(connectedItems, item, MatchDirection.Vertical);
-    }
+    if (horizontalConnectedItems.length > verticalConnectedItems.length) {
+      //have we make a 3 match horizontal
+      if (horizontalConnectedItems.length == 3) {
+        return MatchResult(
+            horizontalConnectedItems, item, MatchDirection.Horizontal);
+      }
+      //check if 4 (long horizontal)
+      if (horizontalConnectedItems.length == 4) {
+        return MatchResult(
+            horizontalConnectedItems, item, MatchDirection.LongHorizontal);
+      }
+      //check if 5 or more (super)
+      if (horizontalConnectedItems.length >= 5) {
+        return MatchResult(
+            horizontalConnectedItems, item, MatchDirection.Super);
+      }
+    } else {
+//have we make a 3 match vertical
+      if (verticalConnectedItems.length == 3) {
+        return MatchResult(
+            verticalConnectedItems, item, MatchDirection.Vertical);
+      }
 
-    //check if 4 (long vertical)
-    if (connectedItems.length == 4) {
-      return MatchResult(connectedItems, item, MatchDirection.LongVertical);
+      //check if 4 (long vertical)
+      if (verticalConnectedItems.length == 4) {
+        return MatchResult(
+            verticalConnectedItems, item, MatchDirection.LongVertical);
+      }
+      //check if 5 or more (super)
+      if (verticalConnectedItems.length >= 5) {
+        return MatchResult(verticalConnectedItems, item, MatchDirection.Super);
+      }
     }
-    //check if 5 or more (super)
-    if (connectedItems.length >= 4) {
-      return MatchResult(connectedItems, item, MatchDirection.Super);
-    }
-    return MatchResult(connectedItems, item, MatchDirection.None);
+    return MatchResult(verticalConnectedItems, item, MatchDirection.None);
   }
 
-  /// square match method checker
-  MatchResult squareMatch(MatchResult matchResult) {
+  /// complex match method checker
+  MatchResult complexMatch(MatchResult matchResult) {
     // if we met the super match there is no need to make a square match check
     if (matchResult.direction == MatchDirection.Super) {
+      // there will be extra in the middle only
+      // which will be in the first place at connected items list
+      var item = matchResult.connectedItems.first;
+
+      List<Item> extraConnectedItems = [];
+      checkDirection(item, 0, 1, extraConnectedItems);
+      checkDirection(item, 0, -1, extraConnectedItems);
+      checkDirection(item, 1, 0, extraConnectedItems);
+      checkDirection(item, -1, 0, extraConnectedItems);
+      if (extraConnectedItems.length >= 2) {
+        // we have a super horizontal match
+        extraConnectedItems.addAll(matchResult.connectedItems);
+        return MatchResult(
+            extraConnectedItems, matchResult.swappedItem, MatchDirection.Super);
+      }
+
       return matchResult;
     }
     // if we have a horizontal or long horizontal match
@@ -579,20 +610,54 @@ class RecycleRush extends FlameGame {
     while (currentItem.isMoving || targetItem.isMoving) {
       await Future.delayed(const Duration(milliseconds: 200));
     }
-    List<MatchResult> matchResults = await checkBoard(currentItem, targetItem);
-    if (matchResults.isEmpty) {
-      await _doSwap(currentItem, targetItem, true);
 
-      // this loop to make sure the items has been move
-      while (currentItem.isMoving || targetItem.isMoving) {
-        await Future.delayed(const Duration(milliseconds: 200));
+    if (currentItem.powerType == PowerType.superType) {
+      // remove all similar items to the target item
+      processSuperWithNormalBoard(true, currentItem, targetItem);
+    } else if (currentItem.powerType != PowerType.none &&
+        targetItem.powerType != PowerType.none) {
+      // two powered items swapped
+      if ((currentItem.powerType != PowerType.col &&
+              targetItem.powerType == PowerType.col) ||
+          (currentItem.powerType == PowerType.row &&
+              targetItem.powerType == PowerType.row) ||
+          (currentItem.powerType == PowerType.col &&
+              targetItem.powerType == PowerType.row) ||
+          (currentItem.powerType == PowerType.row &&
+              targetItem.powerType == PowerType.col)) {
+        // remove target position row and column
+        processRowColBoard(selectedItem!, targetItem);
+        print('wow1');
+      } else if ((currentItem.powerType == PowerType.col &&
+              targetItem.powerType == PowerType.square) ||
+          (currentItem.powerType == PowerType.row &&
+              targetItem.powerType == PowerType.square) ||
+          (currentItem.powerType == PowerType.square &&
+              targetItem.powerType == PowerType.row) ||
+          (currentItem.powerType == PowerType.square &&
+              targetItem.powerType == PowerType.col)) {
+        // remove target position 3 row and 3 column
+        processRowOrColWithSquareBoard(selectedItem!, targetItem);
+        print('wow2');
       }
     } else {
-      // we have a match
-      await processTurnOnMatchBoard(matchResults, true, selectedItem);
+      // normal swapped
+      List<MatchResult> matchResults =
+          await checkBoard(currentItem, targetItem);
+      if (matchResults.isEmpty) {
+        await _doSwap(currentItem, targetItem, true);
+
+        // this loop to make sure the items has been move
+        while (currentItem.isMoving || targetItem.isMoving) {
+          await Future.delayed(const Duration(milliseconds: 200));
+        }
+      } else {
+        // we have a match
+        await processNormalMatchBoard(matchResults, true, selectedItem);
+      }
+      // wait some time before resetting variables
+      await Future.delayed(const Duration(milliseconds: 200));
     }
-    // wait some time before resetting variables
-    await Future.delayed(const Duration(milliseconds: 200));
 
     isProcessingMove = false;
     selectedItem = null;
@@ -627,14 +692,146 @@ class RecycleRush extends FlameGame {
         1;
   }
 
+  /// this function to deal with super match
+  Future<void> processSuperWithNormalBoard(
+      bool subtractMoves, Item selectedItem, Item targetItem) async {
+    Item normalItem = (selectedItem.powerType == PowerType.superType)
+        ? targetItem
+        : selectedItem;
+    // TODO sound relateed to crush
+    AudioPlayer().play(AssetSource('sounds/super.mp3'));
+    // I think there is no need to the direction of the matchresult coz we will destroy all similar elements
+    // the swapped item is null coz we dont want to add process to add new power to the item
+    MatchResult matchResult =
+        MatchResult([selectedItem, targetItem], null, MatchDirection.None);
+    for (int row = 0; row < verticalItemsCount; row++) {
+      for (int col = 0; col < horizontalItemsCount; col++) {
+        if (!board[row][col]!.isUsable) continue;
+        if (board[row][col]!.item == null) continue;
+        if (board[row][col]!.item!.type == normalItem.type) {
+          matchResult.connectedItems.add(board[row][col]!.item!);
+        }
+      }
+    }
+    // removeAndRefill
+    await removeAndRefill([matchResult]);
+    processTurn(1, subtractMoves); //TODO other things
+    await Future.delayed(const Duration(milliseconds: 400));
+    var newMatchDirections = await checkBoard(null, null);
+    if (newMatchDirections.isNotEmpty) {
+      await processNormalMatchBoard(
+          newMatchDirections, false, null); // here there is no select item
+    }
+    var hasNextMatch = await checkBoardForNextMove();
+    if (!hasNextMatch) {
+      // we need to shuffle the existing items
+      await shuffleItems();
+    }
+  }
+
+  /// this function to deal with row and col matches
+  Future<void> processRowColBoard(Item selectedItem, Item targetItem) async {
+    // TODO sound relateed to crush
+    AudioPlayer().play(AssetSource('sounds/better.mp3'));
+    // I think there is no need to the direction of the matchresult coz we will destroy all similar elements
+    // the swapped item is null coz we dont want to add process to add new power to the item
+    MatchResult matchResult =
+        MatchResult([selectedItem, targetItem], null, MatchDirection.None);
+    for (int row = 0; row < verticalItemsCount; row++) {
+      if (!board[row][selectedItem.col]!.isUsable) continue;
+      if (board[row][selectedItem.col]!.item == null) continue;
+      matchResult.connectedItems.add(board[row][selectedItem.col]!.item!);
+    }
+    for (int col = 0; col < horizontalItemsCount; col++) {
+      if (!board[selectedItem.row][col]!.isUsable) continue;
+      if (board[selectedItem.row][col]!.item == null) continue;
+      matchResult.connectedItems.add(board[selectedItem.row][col]!.item!);
+    }
+    // removeAndRefill
+    await removeAndRefill([matchResult]);
+    processTurn(1, true);
+    await Future.delayed(const Duration(milliseconds: 400));
+    var newMatchDirections = await checkBoard(null, null);
+    if (newMatchDirections.isNotEmpty) {
+      await processNormalMatchBoard(
+          newMatchDirections, false, null); // here there is no select item
+    }
+    var hasNextMatch = await checkBoardForNextMove();
+    if (!hasNextMatch) {
+      // we need to shuffle the existing items
+      await shuffleItems();
+    }
+  }
+
+  /// this function to deal with row and col matches
+  Future<void> processRowOrColWithSquareBoard(
+      Item selectedItem, Item targetItem) async {
+    // TODO sound relateed to crush
+    print('wow');
+    AudioPlayer().play(AssetSource('sounds/better.mp3'));
+    // I think there is no need to the direction of the matchresult coz we will destroy all similar elements
+    // the swapped item is null coz we dont want to add process to add new power to the item
+
+    MatchResult matchResult =
+        MatchResult([selectedItem, targetItem], null, MatchDirection.None);
+    for (int row = 0; row < verticalItemsCount; row++) {
+      if (!board[row][selectedItem.col]!.isUsable) continue;
+      if (board[row][selectedItem.col]!.item == null) continue;
+      matchResult.connectedItems.add(board[row][selectedItem.col]!.item!);
+    }
+    if (selectedItem.col + 1 < horizontalItemsCount) {
+      for (int row = 0; row < verticalItemsCount; row++) {
+        if (!board[row][selectedItem.col + 1]!.isUsable) continue;
+        if (board[row][selectedItem.col + 1]!.item == null) continue;
+        matchResult.connectedItems.add(board[row][selectedItem.col + 1]!.item!);
+      }
+    }
+    if (selectedItem.col - 1 >= 0) {
+      for (int row = 0; row < verticalItemsCount; row++) {
+        if (!board[row][selectedItem.col - 1]!.isUsable) continue;
+        if (board[row][selectedItem.col - 1]!.item == null) continue;
+        matchResult.connectedItems.add(board[row][selectedItem.col - 1]!.item!);
+      }
+    }
+    for (int col = 0; col < horizontalItemsCount; col++) {
+      if (!board[selectedItem.row][col]!.isUsable) continue;
+      if (board[selectedItem.row][col]!.item == null) continue;
+      matchResult.connectedItems.add(board[selectedItem.row][col]!.item!);
+    }
+    if (selectedItem.row + 1 < verticalItemsCount) {
+      for (int col = 0; col < horizontalItemsCount; col++) {
+        if (!board[selectedItem.row + 1][col]!.isUsable) continue;
+        if (board[selectedItem.row + 1][col]!.item == null) continue;
+        matchResult.connectedItems.add(board[selectedItem.row + 1][col]!.item!);
+      }
+    }
+    if (selectedItem.row - 1 >= 0) {
+      for (int col = 0; col < horizontalItemsCount; col++) {
+        if (!board[selectedItem.row - 1][col]!.isUsable) continue;
+        if (board[selectedItem.row - 1][col]!.item == null) continue;
+        matchResult.connectedItems.add(board[selectedItem.row - 1][col]!.item!);
+      }
+    }
+
+    // removeAndRefill
+    await removeAndRefill([matchResult]);
+    processTurn(1, true);
+    await Future.delayed(const Duration(milliseconds: 400));
+    var newMatchDirections = await checkBoard(null, null);
+    if (newMatchDirections.isNotEmpty) {
+      await processNormalMatchBoard(
+          newMatchDirections, false, null); // here there is no select item
+    }
+    var hasNextMatch = await checkBoardForNextMove();
+    if (!hasNextMatch) {
+      // we need to shuffle the existing items
+      await shuffleItems();
+    }
+  }
+
   /// this function to deal with matches
-  /// TODO make more points and make block bomber, row or colum bomber like candy crash
-  Future<void> processTurnOnMatchBoard(List<MatchResult> matchResults,
+  Future<void> processNormalMatchBoard(List<MatchResult> matchResults,
       bool subtractMoves, Item? selectedItem) async {
-    //     List<> allMatchResultsItems = [];
-    // for (var itemToRemove in itemsToRemove) {
-    //   itemToRemove.isMatch = false;
-    // }
     for (var matchResult in matchResults) {
       if (matchResult.direction == MatchDirection.Horizontal ||
           matchResult.direction == MatchDirection.Vertical) {
@@ -643,17 +840,17 @@ class RecycleRush extends FlameGame {
           matchResult.direction == MatchDirection.LongVertical) {
         AudioPlayer().play(AssetSource('sounds/better.mp3'));
       } else {
-        // TODO sound for square
         AudioPlayer().play(AssetSource('sounds/super.mp3'));
+        // TODO sound for square
       }
     }
     // removeAndRefill
     await removeAndRefill(matchResults);
-    processTurn(1, subtractMoves); //TODO
+    processTurn(1, subtractMoves); //TODO other things
     await Future.delayed(const Duration(milliseconds: 400));
     var newMatchDirections = await checkBoard(null, null);
     if (newMatchDirections.isNotEmpty) {
-      await processTurnOnMatchBoard(
+      await processNormalMatchBoard(
           newMatchDirections, false, null); // here there is no select item
     }
     var hasNextMatch = await checkBoardForNextMove();
@@ -672,17 +869,10 @@ class RecycleRush extends FlameGame {
     List<ParticleSystemComponent> explosionsParticles = [];
     for (var matchResult in matchResults) {
       for (var item in matchResult.connectedItems) {
-        explosionsParticles.add(ParticleSystemComponent(
-            priority: item.priority + 1, // to be displayed above the item
-            position: item.position,
-            particle: SpriteAnimationParticle(
-                size: Vector2.all(80),
-                animation: SpriteSheet(
-                  image: itemExplosionImage,
-                  srcSize: Vector2.all(500.0),
-                ).createAnimation(row: 0, stepTime: 0.1))));
+        addDestroyParticle(item, explosionsParticles);
       }
       itemsToRemove.addAll(matchResult.connectedItems);
+
       if (matchResult.swappedItem == null) {
         for (var item in itemsToRemove) {
           board[item.row][item.col]!.item = null;
@@ -712,20 +902,64 @@ class RecycleRush extends FlameGame {
         matchResult.swappedItem!.powerType = PowerType.square;
         // TODO square icons
         matchResult.swappedItem!.sprite =
-            Sprite(itemsIcons[matchResult.swappedItem!.type.name]![1]);
+            Sprite(itemsIcons[matchResult.swappedItem!.type.name]![3]);
       } else if (matchResult.direction == MatchDirection.Super) {
         // don't remove the selected item
         itemsToRemove.remove(matchResult.swappedItem!);
         // instead change its type of power
-        matchResult.swappedItem!.powerType = PowerType.type;
+        matchResult.swappedItem!.powerType = PowerType.superType;
         // TODO super icons
-        matchResult.swappedItem!.sprite =
-            Sprite(itemsIcons[matchResult.swappedItem!.type.name]![1]);
+        matchResult.swappedItem!.sprite = Sprite(itemsIcons['super']![0]);
       }
-      for (var item in itemsToRemove) {
+      List<Item> previousItemsToRemove = [];
+      previousItemsToRemove.addAll(itemsToRemove);
+      // check if there is item with power then process its power
+      for (var item in previousItemsToRemove) {
+        if (item.powerType == PowerType.col) {
+          // remove the entire column
+          for (int row = 0; row < verticalItemsCount; row++) {
+            if (!(board[row][item.col]?.isUsable ?? false)) continue;
+            if ((board[row][item.col]!.item != null) &&
+                !itemsToRemove.contains(board[row][item.col]!.item)) {
+              // add the particle
+              addDestroyParticle(
+                  board[row][item.col]!.item!, explosionsParticles);
+
+              // add to remove list
+              itemsToRemove.add(board[row][item.col]!.item!);
+              board[row][item.col]!.item = null;
+            }
+          }
+          addColDestroyParticle(item, explosionsParticles);
+        } else if (item.powerType == PowerType.row) {
+          // remove the entire row
+          for (int col = 0; col < horizontalItemsCount; col++) {
+            if (!(board[item.row][col]?.isUsable ?? false)) continue;
+            if ((board[item.row][col]!.item != null) &&
+                !itemsToRemove.contains(board[item.row][col]!.item)) {
+              // add the particle
+              addDestroyParticle(
+                  board[item.row][col]!.item!, explosionsParticles);
+
+              // add to remove list
+              itemsToRemove.add(board[item.row][col]!.item!);
+              board[item.row][col]!.item = null;
+            }
+          }
+          addRowDestroyParticle(item, explosionsParticles);
+        } else if (item.powerType == PowerType.square) {
+          // remove square area
+          addSquareNeighborsToRemove(item, itemsToRemove, explosionsParticles);
+        } else if (item.powerType == PowerType.superType) {
+          // remove related items
+          // TODO connection
+          addSuperMatchedItemsToRemove(
+              item, itemsToRemove, explosionsParticles);
+        }
         board[item.row][item.col]!.item = null;
       }
     }
+
     // add explosions
     await world.addAll(explosionsParticles);
     // wait to the explosions for some time
@@ -738,11 +972,144 @@ class RecycleRush extends FlameGame {
     for (var row = verticalItemsCount - 1; row >= 0; row--) {
       for (var col = horizontalItemsCount - 1; col >= 0; col--) {
         if (board[row][col]!.item == null) {
-          // print('the location row: $row col: $col is Empty');
           await refillItem(row, col);
         }
       }
     }
+  }
+
+  /// set square area to remove its items
+  void addSuperMatchedItemsToRemove(Item item, List<Item> itemsToRemove,
+      List<ParticleSystemComponent> explosionsParticles) {
+    for (var row = 0; row < verticalItemsCount; row++) {
+      for (var col = 0; col < horizontalItemsCount; col++) {
+        try {
+          if ((board[row][col]?.isUsable ?? false)) {
+            if (!itemsToRemove.contains(board[row][col]?.item) &&
+                board[row][col]?.item?.type == item.type) {
+              // add the particle
+              addDestroyParticle(board[row][col]!.item!, explosionsParticles);
+
+              // add to remove list
+              itemsToRemove.add(board[row][col]!.item!);
+              board[row][col]!.item = null;
+            }
+          }
+        } catch (_) {
+          // index not match error
+        }
+      }
+    }
+  }
+
+  /// set square area to remove its items
+  void addSquareNeighborsToRemove(Item item, List<Item> itemsToRemove,
+      List<ParticleSystemComponent> explosionsParticles) {
+    for (var row = item.row - 1; row <= item.row + 1; row++) {
+      for (var col = item.col - 1; col <= item.col + 1; col++) {
+        try {
+          if ((board[row][col]?.isUsable ?? false)) {
+            if (!itemsToRemove.contains(board[row][col]?.item)) {
+              // add the particle
+              addDestroyParticle(board[row][col]!.item!, explosionsParticles);
+
+              // add to remove list
+              itemsToRemove.add(board[row][col]!.item!);
+              board[row][col]!.item = null;
+            }
+          }
+        } catch (_) {
+          // index not match error
+        }
+      }
+    }
+  }
+
+  /// add item destroy particle method
+  void addDestroyParticle(
+      Item item, List<ParticleSystemComponent> explosionsParticles) {
+    explosionsParticles.add(ParticleSystemComponent(
+        priority: item.priority + 1, // to be displayed above the item
+        position: item.position,
+        particle: SpriteAnimationParticle(
+            size: Vector2.all(80),
+            animation: SpriteSheet(
+              image: itemExplosionImage,
+              srcSize: Vector2.all(500.0),
+            ).createAnimation(row: 0, stepTime: 0.1))));
+  }
+
+  Vector2 randomVector2() =>
+      (Vector2.random(rand) - Vector2.random(rand)) * 100;
+
+  /// add col destory particle method
+  void addColDestroyParticle(
+      Item item, List<ParticleSystemComponent> explosionsParticles) {
+    explosionsParticles.add(
+      ParticleSystemComponent(
+        priority: item.priority + 1, // to be displayed above the item
+        position: item.position,
+        particle: AcceleratedParticle(
+          speed: Vector2(0, 800),
+          child: SpriteAnimationParticle(
+              size: Vector2.all(80),
+              animation: SpriteSheet(
+                image: itemExplosionImage,
+                srcSize: Vector2.all(500.0),
+              ).createAnimation(row: 0, stepTime: 0.5)),
+        ),
+      ),
+    );
+    explosionsParticles.add(
+      ParticleSystemComponent(
+        priority: item.priority + 1, // to be displayed above the item
+        position: item.position,
+        particle: AcceleratedParticle(
+          speed: Vector2(0, -800),
+          child: SpriteAnimationParticle(
+              size: Vector2.all(80),
+              animation: SpriteSheet(
+                image: itemExplosionImage,
+                srcSize: Vector2.all(500.0),
+              ).createAnimation(row: 0, stepTime: 0.5)),
+        ),
+      ),
+    );
+  }
+
+  /// add row destory particle method
+  void addRowDestroyParticle(
+      Item item, List<ParticleSystemComponent> explosionsParticles) {
+    explosionsParticles.add(
+      ParticleSystemComponent(
+        priority: item.priority + 1, // to be displayed above the item
+        position: item.position,
+        particle: AcceleratedParticle(
+          speed: Vector2(800, 0),
+          child: SpriteAnimationParticle(
+              size: Vector2.all(80),
+              animation: SpriteSheet(
+                image: itemExplosionImage,
+                srcSize: Vector2.all(500.0),
+              ).createAnimation(row: 0, stepTime: 0.5)),
+        ),
+      ),
+    );
+    explosionsParticles.add(
+      ParticleSystemComponent(
+        priority: item.priority + 1, // to be displayed above the item
+        position: item.position,
+        particle: AcceleratedParticle(
+          speed: Vector2(-800, 0),
+          child: SpriteAnimationParticle(
+              size: Vector2.all(80),
+              animation: SpriteSheet(
+                image: itemExplosionImage,
+                srcSize: Vector2.all(500.0),
+              ).createAnimation(row: 0, stepTime: 0.5)),
+        ),
+      ),
+    );
   }
 
   /// Refill Items
@@ -752,7 +1119,6 @@ class RecycleRush extends FlameGame {
     // while the cell above our current cell is null and we're below the height of the board
     while (row - yOffset >= 0 && board[row - yOffset][col]!.item == null) {
       // increament y offset
-      // print('the item above current cell is empty');
       yOffset++;
     }
     // we either hit the top of board or found an item
@@ -773,7 +1139,6 @@ class RecycleRush extends FlameGame {
     }
     // if we have hit the top of the board
     if (row - yOffset < 0) {
-      // print('reached the top');
       spawnItemAtTop(col);
       // wait to the item to move to spawn new one
       await Future.delayed(const Duration(milliseconds: 50));

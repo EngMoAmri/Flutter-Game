@@ -8,7 +8,7 @@ import 'package:flutter_game/src/recycle_rush.dart';
 enum ItemType { can, carton, glass, pan, bottle }
 
 /// destroy type
-enum PowerType { row, col, square, type, none }
+enum PowerType { row, col, square, superType, none }
 
 class Item extends SpriteComponent with DragCallbacks, HasGameRef<RecycleRush> {
   Item(
