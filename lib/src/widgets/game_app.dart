@@ -74,9 +74,10 @@ class _GameAppState extends State<GameApp> {
             child: Column(
               children: [
                 Header(
-                  goul: game.goul,
+                  goul: game.goulPoints,
                   moves: game.moves,
                   points: game.points,
+                  externalGouls: game.externalGouls,
                   screenSize: size,
                 ),
                 Expanded(child: Container()),
@@ -107,7 +108,7 @@ class _GameAppState extends State<GameApp> {
                                 child: GestureDetector(
                                   onTap: () {
                                     setState(() {});
-                                    game.startGame();
+                                    game.boardController.startGame();
                                   },
                                   child: const OverlayScreen(
                                     title: 'G A M E   O V E R',
@@ -124,7 +125,7 @@ class _GameAppState extends State<GameApp> {
                                 child: GestureDetector(
                                   onTap: () {
                                     setState(() {});
-                                    game.startGame();
+                                    game.boardController.startGame();
                                   },
                                   child: const OverlayScreen(
                                     title: 'Y O U   W O N ! ! !',

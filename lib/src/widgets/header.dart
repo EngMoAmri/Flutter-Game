@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_game/src/components/item.dart';
 import 'package:flutter_game/src/widgets/stars_widgets.dart';
 
 class Header extends StatefulWidget {
@@ -9,12 +10,14 @@ class Header extends StatefulWidget {
     required this.goul,
     required this.moves,
     required this.points,
+    required this.externalGouls,
     required this.screenSize,
   });
 
   final ValueNotifier<int> goul;
   final ValueNotifier<int> moves;
   final ValueNotifier<int> points;
+  final ValueNotifier<Map<GoulItem, int>> externalGouls;
   final Size screenSize;
   // TODO reset these on new game
   static bool star1Played = false;
@@ -26,6 +29,111 @@ class Header extends StatefulWidget {
 }
 
 class _HeaderState extends State<Header> {
+  Map<String, Map<String, Image>> itemsImagesMap = {};
+  @override
+  void initState() {
+    itemsImagesMap.addAll({
+      'can': {
+        'none': Image.asset(
+          'assets/images/can.png',
+          width: 36,
+        ),
+        'col': Image.asset(
+          'assets/images/can-col.png',
+          width: 36,
+        ),
+        'row': Image.asset(
+          'assets/images/can-row.png',
+          width: 36,
+        ),
+        'square': Image.asset(
+          'assets/images/can-square.png',
+          width: 36,
+        ),
+      },
+      'carton': {
+        'none': Image.asset(
+          'assets/images/carton.png',
+          width: 36,
+        ),
+        'col': Image.asset(
+          'assets/images/carton-col.png',
+          width: 36,
+        ),
+        'row': Image.asset(
+          'assets/images/carton-row.png',
+          width: 36,
+        ),
+        'square': Image.asset(
+          'assets/images/carton-square.png',
+          width: 36,
+        ),
+      },
+      'glass': {
+        'none': Image.asset(
+          'assets/images/glass.png',
+          width: 36,
+        ),
+        'col': Image.asset(
+          'assets/images/glass-col.png',
+          width: 36,
+        ),
+        'row': Image.asset(
+          'assets/images/glass-row.png',
+          width: 36,
+        ),
+        'square': Image.asset(
+          'assets/images/glass-square.png',
+          width: 36,
+        ),
+      },
+      'pan': {
+        'none': Image.asset(
+          'assets/images/pan.png',
+          width: 36,
+        ),
+        'col': Image.asset(
+          'assets/images/pan-col.png',
+          width: 36,
+        ),
+        'row': Image.asset(
+          'assets/images/pan-row.png',
+          width: 36,
+        ),
+        'square': Image.asset(
+          'assets/images/pan-square.png',
+          width: 36,
+        ),
+      },
+      'bottle': {
+        'none': Image.asset(
+          'assets/images/bottle.png',
+          width: 36,
+        ),
+        'col': Image.asset(
+          'assets/images/bottle-col.png',
+          width: 36,
+        ),
+        'row': Image.asset(
+          'assets/images/bottle-row.png',
+          width: 36,
+        ),
+        'square': Image.asset(
+          'assets/images/bottle-square.png',
+          width: 36,
+        ),
+      },
+      'superType': {
+        'superType': Image.asset(
+          'assets/images/grenade.png',
+          width: 36,
+        ),
+      },
+    });
+
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -226,27 +334,43 @@ class _HeaderState extends State<Header> {
                       ),
                     ],
                   ),
-                  child: ValueListenableBuilder<int>(
-                    valueListenable: widget.points,
-                    builder: (context, points, child) {
+                  child: ValueListenableBuilder<Map<GoulItem, int>>(
+                    valueListenable: widget.externalGouls,
+                    builder: (context, externalGouls, child) {
                       return Padding(
                         padding: const EdgeInsets.all(8),
-                        child: SingleChildScrollView(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                'assets/images/can.png',
-                                width: 36,
-                              ),
-                              Text(
-                                '5',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18),
-                              )
-                            ],
+                        child: SizedBox(
+                          height: 35,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              scrollDirection: Axis.horizontal,
+                              itemBuilder: (context, index) {
+                                return Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    itemsImagesMap[externalGouls.keys
+                                            .toList()[index]
+                                            .type
+                                            .name]![
+                                        externalGouls.keys
+                                            .toList()[index]
+                                            .powerType
+                                            .name]!,
+                                    Text(
+                                      '${externalGouls[externalGouls.keys.toList()[index]]}',
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18),
+                                    )
+                                  ],
+                                );
+                              },
+                              itemCount: externalGouls.keys.length,
+                            ),
                           ),
                         ),
                       );
