@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-import 'src/widgets/game_app.dart';
+import 'pages/home_page.dart';
 
 void main() {
-  runApp(const GameApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const HomePage());
 }
+
 /// TODO list
-/// - long crash, super crash
 /// - helps items
 /// - main page
 /// - levels
-/// - fix height less than the required
 /// - set moves text font size on large width

@@ -42,9 +42,8 @@ class RecycleRush extends FlameGame {
   final ValueNotifier<Map<GoulItem, int>> externalGouls = ValueNotifier({
     GoulItem(type: ItemType.bottle, powerType: PowerType.none): 5,
     GoulItem(type: ItemType.pan, powerType: PowerType.none): 25,
-    GoulItem(type: ItemType.can, powerType: PowerType.none): 15,
     GoulItem(type: ItemType.superType, powerType: PowerType.superType): 2,
-  }); // external items earned
+  }); // external items earned max 3
   // TODO notified
   final rand = math.Random();
 

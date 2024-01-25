@@ -31,20 +31,20 @@ class BoardController {
             recycleRush.rand.nextInt(recycleRush.itemsTypes.length - 1);
         // THis just for testing
         // // TODO remove
-        if (row == 0 && col == 3 ||
-            row == 1 && col == 3 ||
-            row == 2 && col == 2 ||
-            row == 2 && col == 4 ||
-            row == 2 && col == 5) {
-          randomItemIndex = 0;
-        }
-        if (row == 0 && col == 2 ||
-            row == 1 && col == 2 ||
-            row == 2 && col == 3 ||
-            row == 2 && col == 1 ||
-            row == 2 && col == 0) {
-          randomItemIndex = 1;
-        }
+        // if (row == 0 && col == 3 ||
+        //     row == 1 && col == 3 ||
+        //     row == 2 && col == 2 ||
+        //     row == 2 && col == 4 ||
+        //     row == 2 && col == 5) {
+        //   randomItemIndex = 0;
+        // }
+        // if (row == 0 && col == 2 ||
+        //     row == 1 && col == 2 ||
+        //     row == 2 && col == 3 ||
+        //     row == 2 && col == 1 ||
+        //     row == 2 && col == 0) {
+        //   randomItemIndex = 1;
+        // }
 
         var item = Item(
           itemPosition: position,

@@ -413,8 +413,10 @@ class ProcessController {
           if (recycleRush.externalGouls.value[goulItem] == 0) {
             continue;
           }
-          recycleRush.externalGouls.value[goulItem] =
-              recycleRush.externalGouls.value[goulItem]! - 1;
+          Map<GoulItem, int> oldExternalGouls = {};
+          oldExternalGouls.addAll(recycleRush.externalGouls.value);
+          oldExternalGouls[goulItem] = oldExternalGouls[goulItem]! - 1;
+          recycleRush.externalGouls.value = oldExternalGouls;
         }
       }
     }
