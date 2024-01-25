@@ -2,8 +2,8 @@ import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flame/extensions.dart';
-import 'package:flutter_game/src/config.dart';
-import 'package:flutter_game/src/recycle_rush.dart';
+import 'package:flutter_game/game_src/config.dart';
+import 'package:flutter_game/game_src/recycle_rush.dart';
 
 enum ItemType {
   can,

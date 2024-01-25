@@ -7,7 +7,7 @@ import 'package:flame/extensions.dart' as ext;
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_game/src/controllers/process_controller.dart';
+import 'package:flutter_game/game_src/controllers/process_controller.dart';
 
 import 'components/components.dart';
 import 'config.dart';

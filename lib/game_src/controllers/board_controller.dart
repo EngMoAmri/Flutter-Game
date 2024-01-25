@@ -1,8 +1,8 @@
 import 'package:flame/game.dart';
-import 'package:flutter_game/src/components/components.dart';
-import 'package:flutter_game/src/config.dart';
-import 'package:flutter_game/src/match_result.dart';
-import 'package:flutter_game/src/recycle_rush.dart';
+import 'package:flutter_game/game_src/components/components.dart';
+import 'package:flutter_game/game_src/config.dart';
+import 'package:flutter_game/game_src/match_result.dart';
+import 'package:flutter_game/game_src/recycle_rush.dart';
 
 class BoardController {
   BoardController(this.recycleRush);

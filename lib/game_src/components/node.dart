@@ -1,7 +1,7 @@
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_game/src/components/item.dart';
-import 'package:flutter_game/src/config.dart';
+import 'package:flutter_game/game_src/components/item.dart';
+import 'package:flutter_game/game_src/config.dart';
 
 class Node extends RectangleComponent {
   Node(Vector2 nodePosition, {required this.isUsable, required this.item})

@@ -5,13 +5,13 @@ import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_game/src/config.dart';
+import 'package:flutter_game/game_src/config.dart';
 // import 'package:google_fonts/google_fonts.dart';
 
-import '../src/recycle_rush.dart';
-import '../src/widgets/helps_widget.dart';
-import '../src/widgets/overlay_screen.dart'; // Add this import
-import '../src/widgets/header.dart'; // And this one too
+import '../game_src/recycle_rush.dart';
+import '../game_src/widgets/helps_widget.dart';
+import '../game_src/widgets/overlay_screen.dart'; // Add this import
+import '../game_src/widgets/header.dart'; // And this one too
 
 class GamePage extends StatefulWidget {
   // Modify this line
