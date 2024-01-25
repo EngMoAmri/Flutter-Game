@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_game/game_src/config.dart';
 import 'package:flutter_game/utlis/path_line.dart';
+import 'package:linked_scroll_controller/linked_scroll_controller.dart';
+import 'package:zwidget/zwidget.dart';
 
 class HomePage extends StatefulWidget {
   // Modify this line
@@ -18,7 +20,10 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final player = AudioPlayer();
-  final scrollController = ScrollController();
+  final LinkedScrollControllerGroup controllers = LinkedScrollControllerGroup();
+
+  late ScrollController scrollControllerRoute = controllers.addAndGet();
+  late ScrollController scrollController3D = controllers.addAndGet();
   List<Widget> levels = [];
   @override
   void initState() {
@@ -87,74 +92,185 @@ class _HomePageState extends State<HomePage> {
         ),
         child: Scaffold(
           body: Container(
+            decoration: const BoxDecoration(
+                image: DecorationImage(
+                    image: AssetImage('assets/images/sky.jpg'),
+                    fit: BoxFit.cover)),
             margin: EdgeInsets.zero,
             child: Column(
               children: [
-                // SizedBox(
-                //   height: size.height / 2,
-                // ),
                 Expanded(
-                  child: RotatedBox(
-                    quarterTurns: 2,
-                    child: ListWheelScrollView(
-                        scrollBehavior: MyCustomScrollBehavior()
-                          ..copyWith(scrollbars: false), //TODO
-                        itemExtent: 200,
-                        squeeze: 1.1,
+                  child: Stack(
+                    children: [
+                      SingleChildScrollView(
+                        child: SizedBox(
+                          height: size.height * 2 - 150,
+                          child: RotatedBox(
+                            quarterTurns: 2,
+                            child: ListWheelScrollView(
+                                controller: scrollControllerRoute,
+                                clipBehavior: Clip.hardEdge,
+                                scrollBehavior: MyCustomScrollBehavior()
+                                  ..copyWith(scrollbars: false), //TODO
+                                itemExtent: 200,
+                                squeeze: 1.1,
 
-                        // clipBehavior: Clip.antiAlias,
-                        // offAxisFraction: 1.05,
-                        children: List.generate(
-                          100,
-                          (index) => Container(
-                            color:
-                                (index % 2 == 0) ? Colors.green : Colors.yellow,
-                            height: 200,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      CustomPaint(
-                                        painter: PathLine(drawPath(
-                                            size.width, index % 2 == 0)),
-                                      ),
-                                      Positioned(
-                                        // left: (index % 2 == 0) ? null : 100,
-                                        // right: (index % 2 == 0) ? 100 : null,
-                                        child: SizedBox(
-                                          width: 80,
-                                          child: AspectRatio(
-                                            aspectRatio: 1,
-                                            child: Card(
-                                              elevation: 5.0,
-                                              shape: RoundedRectangleBorder(
-                                                  side: const BorderSide(
-                                                      color: Colors.green,
-                                                      width: 1.0),
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          100.0)),
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                        100.0),
-                                                child: Center(
-                                                  child: Text('1'),
+                                // clipBehavior: Clip.antiAlias,
+                                // offAxisFraction: 1.05,
+                                children: List.generate(
+                                  100,
+                                  (index) => Container(
+                                    color: (index % 2 == 0)
+                                        ? Colors.green
+                                        : Colors.amber,
+                                    height: 200,
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Stack(
+                                            alignment: Alignment.centerRight,
+                                            children: [
+                                              Center(
+                                                child: CustomPaint(
+                                                  painter: PathLine(drawPath(
+                                                      size.width,
+                                                      index % 2 == 0)),
                                                 ),
                                               ),
-                                            ),
+                                              // Align(
+                                              //     alignment:
+                                              //         Alignment.centerLeft,
+                                              //     child: Transform(
+                                              //       transform: zMatrix4(
+                                              //           xTilt: (22 / 7) / 3,
+                                              //           yTilt: (22 / 7) / 4,
+                                              //           zTranslation: 100,
+                                              //           perspective: 5),
+                                              //       child: Container(
+                                              //         color: Colors.red,
+                                              //         width: 100,
+                                              //         height: 100,
+                                              //       ),
+                                              //     )
+                                              //     // ZWidget.bothDirections(
+                                              //     //   // key: _contentKey,
+                                              //     //   midChild: RotatedBox(
+                                              //     //     quarterTurns: 2,
+                                              //     //     child: Image.asset(
+                                              //     //         'assets/images/can.png'),
+                                              //     //   ),
+                                              //     //   rotationX: 90,
+                                              //     //   rotationY: 90,
+                                              //     //   layers: 11,
+                                              //     //   depth: 12,
+                                              //     // ),
+                                              //     ),
+                                              RotatedBox(
+                                                quarterTurns: 2,
+                                                child: SizedBox(
+                                                  width: 80,
+                                                  child: AspectRatio(
+                                                    aspectRatio: 1,
+                                                    child: Card(
+                                                      elevation: 5.0,
+                                                      shape: RoundedRectangleBorder(
+                                                          side:
+                                                              const BorderSide(
+                                                                  color: Colors
+                                                                      .green,
+                                                                  width: 1.0),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      100.0)),
+                                                      child: ClipRRect(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(
+                                                                    100.0),
+                                                        child: Center(
+                                                          child: Text(
+                                                              '${index + 1}'),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                )),
                           ),
-                        )),
+                        ),
+                      ),
+                      SingleChildScrollView(
+                        child: SizedBox(
+                          height: size.height * 2 - 150,
+                          child: RotatedBox(
+                            quarterTurns: 2,
+                            child: ListWheelScrollView(
+                                controller: scrollController3D,
+                                clipBehavior: Clip.hardEdge,
+                                scrollBehavior: MyCustomScrollBehavior()
+                                  ..copyWith(scrollbars: false), //TODO
+                                itemExtent: 200,
+                                squeeze: 1.1,
+// TODO complete by position some items
+                                // clipBehavior: Clip.antiAlias,
+                                // offAxisFraction: 1.05,
+                                children: List.generate(
+                                  100,
+                                  (index) => SizedBox(
+                                    height: 200,
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Stack(
+                                            alignment: Alignment.centerRight,
+                                            children: [
+                                              Align(
+                                                  alignment:
+                                                      Alignment.centerLeft,
+                                                  child: Transform(
+                                                    transform: zMatrix4(
+                                                        xTilt: (22 / 7) / 3,
+                                                        yTilt: (22 / 7) / 4,
+                                                        zTranslation: 100,
+                                                        perspective: 5),
+                                                    child: Container(
+                                                      color: Colors.red,
+                                                      width: 100,
+                                                      height: 100,
+                                                    ),
+                                                  )
+                                                  // ZWidget.bothDirections(
+                                                  //   // key: _contentKey,
+                                                  //   midChild: RotatedBox(
+                                                  //     quarterTurns: 2,
+                                                  //     child: Image.asset(
+                                                  //         'assets/images/can.png'),
+                                                  //   ),
+                                                  //   rotationX: 90,
+                                                  //   rotationY: 90,
+                                                  //   layers: 11,
+                                                  //   depth: 12,
+                                                  // ),
+                                                  ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 )
               ],
