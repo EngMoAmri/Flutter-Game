@@ -127,7 +127,8 @@ class _HomePageState extends State<HomePage> {
                                   decoration: const BoxDecoration(
                                       image: DecorationImage(
                                           image: AssetImage(
-                                              'assets/images/asphalt.jpg'))),
+                                              'assets/images/asphalt.jpg'),
+                                          fit: BoxFit.cover)),
                                   height: 200,
                                   child: Row(
                                     children: [
@@ -197,7 +198,8 @@ class _HomePageState extends State<HomePage> {
                                     decoration: const BoxDecoration(
                                         image: DecorationImage(
                                             image: AssetImage(
-                                                'assets/images/rocks.jpg'))),
+                                                'assets/images/rocks.jpg'),
+                                            fit: BoxFit.cover)),
                                     child: RotatedBox(
                                       quarterTurns: 2,
                                       child: Transform(
@@ -217,7 +219,11 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                   Expanded(child: Container()),
                                   Container(
-                                    color: Colors.white,
+                                    decoration: const BoxDecoration(
+                                        image: DecorationImage(
+                                            image: AssetImage(
+                                                'assets/images/rocks.jpg'),
+                                            fit: BoxFit.cover)),
                                     child: RotatedBox(
                                       quarterTurns: 2,
                                       child: Transform(
