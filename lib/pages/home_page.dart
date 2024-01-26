@@ -113,7 +113,7 @@ class _HomePageState extends State<HomePage> {
                         child: SizedBox(
                           height: size.height * 2 - 150,
                           child: ListWheelScrollView(
-                              physics: const ClampingScrollPhysics(),
+                              physics: const BouncingScrollPhysics(),
                               controller: scrollControllerRoute,
                               clipBehavior: Clip.hardEdge,
                               scrollBehavior: MyCustomScrollBehavior()
@@ -159,9 +159,9 @@ class _HomePageState extends State<HomePage> {
                                               child: Padding(
                                                 padding: (index % 2 != 0)
                                                     ? const EdgeInsets.only(
-                                                        left: 120)
+                                                        left: 100)
                                                     : const EdgeInsets.only(
-                                                        right: 120),
+                                                        right: 100),
                                                 child: SizedBox(
                                                   width: 80,
                                                   child: AspectRatio(
@@ -219,7 +219,7 @@ class _HomePageState extends State<HomePage> {
                               children: [
                                 Expanded(
                                   child: ListWheelScrollView(
-                                    physics: const ClampingScrollPhysics(),
+                                    physics: const BouncingScrollPhysics(),
                                     controller: scrollController3D1,
                                     clipBehavior: Clip.hardEdge,
                                     scrollBehavior: MyCustomScrollBehavior()
