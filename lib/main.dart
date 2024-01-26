@@ -5,6 +5,8 @@ import 'pages/home_page.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const HomePage());
+  // GetMaterialApp(
+  //     debugShowCheckedModeBanner: false, home: HomePage()));
 }
 
 /// TODO list
