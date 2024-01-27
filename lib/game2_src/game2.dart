@@ -24,7 +24,7 @@ class Game2 extends FlameGame {
   @override
   ext.Color backgroundColor() {
     // remove background black color
-    return Colors.transparent;
+    return Colors.black;
   }
 
   final rand = math.Random();
@@ -34,16 +34,16 @@ class Game2 extends FlameGame {
 
   set playState(PlayState playState) {
     _playState = playState;
-    switch (playState) {
-      case PlayState.loading:
-      case PlayState.gameOver:
-      case PlayState.won:
-        overlays.add(playState.name);
-      case PlayState.playing:
-        overlays.remove(PlayState.loading.name);
-        overlays.remove(PlayState.gameOver.name);
-        overlays.remove(PlayState.won.name);
-    }
+    // switch (playState) {
+    //   case PlayState.loading:
+    //   case PlayState.gameOver:
+    //   case PlayState.won:
+    //   // overlays.add(playState.name);
+    //   case PlayState.playing:
+    //     overlays.remove(PlayState.loading.name);
+    //     overlays.remove(PlayState.gameOver.name);
+    //     overlays.remove(PlayState.won.name);
+    // }
   }
 
   @override
@@ -68,13 +68,14 @@ class Game2 extends FlameGame {
       ItemType.bottle,
     ]);
 
-    world.add(CircleComponent(
-        radius: 25,
-        position: size / 2,
-        paint: Paint()..color = Colors.white60,
-        children: [
-          Item(
-              image: itemsIcons[0], type: itemsTypes[0], itemPosition: size / 2)
-        ]));
+    world.add(Item(
+        image: itemsIcons[0], type: itemsTypes[0], itemPosition: size / 2));
   }
+
+  // @override
+  // void onGameResize(ext.Vector2 size) {
+  //   gameWidth = size.x;
+  //   gameHeight = size.y;
+  //   super.onGameResize(Vector2(gameWidth, gameHeight));
+  // }
 }

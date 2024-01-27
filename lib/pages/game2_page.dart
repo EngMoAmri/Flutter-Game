@@ -30,11 +30,6 @@ class _Game2PageState extends State<Game2Page> {
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
 
-    if (Platform.isLinux || Platform.isMacOS || Platform.isWindows || kIsWeb) {
-      if (size.width > 550) {
-        size = Size(550, size.height);
-      }
-    }
     gameWidth = size.width - 8; // 8 is the padding
     gameHeight = size.height - 8; // 8 is the padding
     return MaterialApp(
