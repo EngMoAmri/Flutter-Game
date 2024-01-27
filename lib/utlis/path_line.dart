@@ -8,7 +8,7 @@ class PathLine extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     Paint paint = Paint()
-      ..color = Colors.white.withOpacity(0.8)
+      ..color = Colors.white
       ..style = PaintingStyle.stroke
       ..strokeWidth = 6.0;
 

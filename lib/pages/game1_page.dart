@@ -5,13 +5,13 @@ import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_game/game_src/config.dart';
+import 'package:flutter_game/game1_src/config.dart';
 // import 'package:google_fonts/google_fonts.dart';
 
-import '../game_src/recycle_rush.dart';
-import '../game_src/widgets/helps_widget.dart';
-import '../game_src/widgets/overlay_screen.dart'; // Add this import
-import '../game_src/widgets/header.dart'; // And this one too
+import '../game1_src/recycle_rush.dart';
+import '../game1_src/widgets/helps_widget.dart';
+import '../game1_src/widgets/overlay_screen.dart'; // Add this import
+import '../game1_src/widgets/header.dart'; // And this one too
 
 class GamePage extends StatefulWidget {
   // Modify this line
@@ -84,7 +84,7 @@ class _GamePageState extends State<GamePage> {
                 image: DecorationImage(
                     fit: BoxFit.cover,
                     image: AssetImage(
-                      'assets/images/background-1.jpg',
+                      'assets/images/backgrounds/background-1.jpg',
                     ))),
             margin: EdgeInsets.zero,
             child: Row(

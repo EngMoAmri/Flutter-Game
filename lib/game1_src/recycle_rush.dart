@@ -7,7 +7,7 @@ import 'package:flame/extensions.dart' as ext;
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_game/game_src/controllers/process_controller.dart';
+import 'package:flutter_game/game1_src/controllers/process_controller.dart';
 
 import 'components/components.dart';
 import 'config.dart';
@@ -142,37 +142,37 @@ class RecycleRush extends FlameGame {
 
     itemsIcons.addAll({
       'can': {
-        'none': await imagesLoader.load('can.png'),
-        'col': await imagesLoader.load('can-col.png'),
-        'row': await imagesLoader.load('can-row.png'),
-        'square': await imagesLoader.load('can-square.png'),
+        'none': await imagesLoader.load('items/can.png'),
+        'col': await imagesLoader.load('items/can-col.png'),
+        'row': await imagesLoader.load('items/can-row.png'),
+        'square': await imagesLoader.load('items/can-square.png'),
       },
       'carton': {
-        'none': await imagesLoader.load('carton.png'),
-        'col': await imagesLoader.load('carton-col.png'),
-        'row': await imagesLoader.load('carton-row.png'),
-        'square': await imagesLoader.load('carton-square.png'),
+        'none': await imagesLoader.load('items/carton.png'),
+        'col': await imagesLoader.load('items/carton-col.png'),
+        'row': await imagesLoader.load('items/carton-row.png'),
+        'square': await imagesLoader.load('items/carton-square.png'),
       },
       'glass': {
-        'none': await imagesLoader.load('glass.png'),
-        'col': await imagesLoader.load('glass-row.png'),
-        'row': await imagesLoader.load('glass-row.png'),
-        'square': await imagesLoader.load('glass-square.png'),
+        'none': await imagesLoader.load('items/glass.png'),
+        'col': await imagesLoader.load('items/glass-row.png'),
+        'row': await imagesLoader.load('items/glass-row.png'),
+        'square': await imagesLoader.load('items/glass-square.png'),
       },
       'pan': {
-        'none': await imagesLoader.load('pan.png'),
-        'col': await imagesLoader.load('pan-col.png'),
-        'row': await imagesLoader.load('pan-row.png'),
-        'square': await imagesLoader.load('pan-square.png'),
+        'none': await imagesLoader.load('items/pan.png'),
+        'col': await imagesLoader.load('items/pan-col.png'),
+        'row': await imagesLoader.load('items/pan-row.png'),
+        'square': await imagesLoader.load('items/pan-square.png'),
       },
       'bottle': {
-        'none': await imagesLoader.load('bottle.png'),
-        'col': await imagesLoader.load('bottle-col.png'),
-        'row': await imagesLoader.load('bottle-row.png'),
-        'square': await imagesLoader.load('bottle-square.png'),
+        'none': await imagesLoader.load('items/bottle.png'),
+        'col': await imagesLoader.load('items/bottle-col.png'),
+        'row': await imagesLoader.load('items/bottle-row.png'),
+        'square': await imagesLoader.load('items/bottle-square.png'),
       },
       'superType': {
-        'superType': await imagesLoader.load('grenade.png'),
+        'superType': await imagesLoader.load('items/grenade.png'),
       },
     });
     itemsTypes.addAll([

@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_game/game_src/components/item.dart';
-import 'package:flutter_game/game_src/widgets/stars_widgets.dart';
+import 'package:flutter_game/game1_src/components/item.dart';
+import 'package:flutter_game/game1_src/widgets/stars_widgets.dart';
 
 class Header extends StatefulWidget {
   const Header({

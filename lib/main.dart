@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import 'pages/home_page.dart';
+import 'pages/game2_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const HomePage());
+  runApp(const Game2Page());
   // GetMaterialApp(
   //     debugShowCheckedModeBanner: false, home: HomePage()));
 }

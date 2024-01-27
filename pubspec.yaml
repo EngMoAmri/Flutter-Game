@@ -68,6 +68,11 @@ flutter:
   assets:
     - assets/sounds/
     - assets/images/
+    - assets/images/trees/
+    - assets/images/backgrounds/
+    - assets/images/items/
+    - assets/images/clouds/
+    - assets/images/trashes/
     - assets/icons/
     
   # An image asset can refer to one or more resolution-specific "variants", see

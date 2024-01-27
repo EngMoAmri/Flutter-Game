@@ -2,10 +2,10 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/components.dart';
 import 'package:flame/particles.dart';
 import 'package:flame/sprite.dart';
-import 'package:flutter_game/game_src/components/components.dart';
-import 'package:flutter_game/game_src/config.dart';
-import 'package:flutter_game/game_src/match_result.dart';
-import 'package:flutter_game/game_src/recycle_rush.dart';
+import 'package:flutter_game/game1_src/components/components.dart';
+import 'package:flutter_game/game1_src/config.dart';
+import 'package:flutter_game/game1_src/match_result.dart';
+import 'package:flutter_game/game1_src/recycle_rush.dart';
 
 class ProcessController {
   ProcessController(this.recycleRush);

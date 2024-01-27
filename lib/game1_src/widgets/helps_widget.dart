@@ -31,7 +31,7 @@ class _HelpsWidgetState extends State<HelpsWidget> {
                   Expanded(
                       child: ClipRRect(
                     borderRadius: BorderRadius.circular(20.0),
-                    child: Image.asset('assets/images/wood-1.jpg',
+                    child: Image.asset('assets/images/backgrounds/wood-1.jpg',
                         fit: BoxFit.cover),
                   )),
                 ],
@@ -69,7 +69,7 @@ class _HelpsWidgetState extends State<HelpsWidget> {
                                 borderRadius: BorderRadius.circular(100.0),
                                 child: Center(
                                     child: Image.asset(
-                                        'assets/images/grenade.png')),
+                                        'assets/images/items/grenade.png')),
                               ),
                             ),
                           ),
@@ -85,7 +85,7 @@ class _HelpsWidgetState extends State<HelpsWidget> {
                                 borderRadius: BorderRadius.circular(100.0),
                                 child: Center(
                                     child: Image.asset(
-                                        'assets/images/destroy-hammer.png')),
+                                        'assets/images/items/destroy-hammer.png')),
                               ),
                             ),
                           ),
@@ -101,7 +101,7 @@ class _HelpsWidgetState extends State<HelpsWidget> {
                                 borderRadius: BorderRadius.circular(100.0),
                                 child: Center(
                                     child: Image.asset(
-                                        'assets/images/move-hand.png')),
+                                        'assets/images/items/move-hand.png')),
                               ),
                             ),
                           ),

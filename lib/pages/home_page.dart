@@ -1,12 +1,10 @@
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_game/game_src/config.dart';
 import 'package:flutter_game/utlis/path_line.dart';
+import 'package:flutter_game/widgets/level_button.dart';
 import 'dart:math' as math;
 import 'package:linked_scroll_controller/linked_scroll_controller.dart';
 
@@ -23,10 +21,29 @@ class _HomePageState extends State<HomePage> {
   final LinkedScrollControllerGroup controllers = LinkedScrollControllerGroup();
 
   late ScrollController scrollControllerRoute = controllers.addAndGet();
-  late ScrollController scrollController3D1 = controllers.addAndGet();
+  late ScrollController scrollController3D = controllers.addAndGet();
+  // this coz the trees flips so I added this and stack to avoid this problem
   late ScrollController scrollController3D2 = controllers.addAndGet();
+  var horizontalScrollController =
+      ScrollController(); // this is to make the whel scroll view width exceed the screen width
   List<Widget> levels = [];
-
+  List<String> trees = [
+    'assets/images/trees/tree-1.png',
+    'assets/images/trees/tree-2.png',
+    'assets/images/trees/tree-3.png',
+    'assets/images/trees/tree-4.png',
+    'assets/images/trees/tree-5.png',
+    'assets/images/trees/tree-6.png',
+    'assets/images/trees/tree-7.png',
+    'assets/images/trees/tree-8.png',
+  ];
+  List<String> trashes = [
+    'assets/images/trashes/trash-1.png',
+    'assets/images/trashes/trash-2.png',
+    'assets/images/trashes/trash-3.png',
+    'assets/images/trashes/trash-4.png',
+  ];
+  var rand = math.Random();
   @override
   void initState() {
     player.play(
@@ -36,8 +53,12 @@ class _HomePageState extends State<HomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       scrollControllerRoute
           .jumpTo(scrollControllerRoute.position.maxScrollExtent);
-      scrollController3D1.jumpTo(scrollController3D1.position.maxScrollExtent);
+      scrollController3D.jumpTo(scrollController3D.position.maxScrollExtent);
       scrollController3D2.jumpTo(scrollController3D2.position.maxScrollExtent);
+
+      // this will scroll to the middle
+      horizontalScrollController
+          .jumpTo(horizontalScrollController.position.maxScrollExtent / 2);
     });
     super.initState();
   }
@@ -46,10 +67,10 @@ class _HomePageState extends State<HomePage> {
     Size size = Size((width / 2), 200);
     Path path = Path();
     if (left) {
-      path.moveTo(10, -100);
+      path.moveTo(15, -104);
       path.quadraticBezierTo(-size.width / 2, 0, 0, 100);
     } else {
-      path.moveTo(-10, -100);
+      path.moveTo(-15, -104);
       path.quadraticBezierTo(size.width / 2, 0, 0, 100);
     }
     return path;
@@ -58,33 +79,12 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // this will scroll to the middle
+      horizontalScrollController
+          .jumpTo(horizontalScrollController.position.maxScrollExtent / 2);
+    });
 
-    if (Platform.isLinux || Platform.isMacOS || Platform.isWindows || kIsWeb) {
-      if (size.width > 550) {
-        size = Size(550, size.height);
-      }
-    }
-    if (size.width < 508) {
-      gameWidth = size.width - 8; // 8 is the padding
-    } else {
-      gameWidth = maxLength;
-    }
-    if (size.height < 708) {
-      gameHeight = size.height - 308; // 8 is the padding
-    } else {
-      gameHeight = maxLength;
-    }
-    // make it square
-    if (gameHeight > gameWidth) {
-      gameHeight = gameWidth;
-    } else {
-      gameWidth = gameHeight;
-    }
-    itemGutter = gameWidth * itemGutterRatio;
-    itemSize = (horizontalItemsCount > verticalItemsCount)
-        ? (gameWidth - (itemGutter * verticalItemsCount)) / horizontalItemsCount
-        : (gameWidth - (itemGutter * horizontalItemsCount)) /
-            verticalItemsCount;
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -100,174 +100,360 @@ class _HomePageState extends State<HomePage> {
           body: Container(
             decoration: const BoxDecoration(
                 image: DecorationImage(
-                    image: AssetImage('assets/images/sky.jpg'),
+                    image: AssetImage('assets/images/backgrounds/sky.jpg'),
                     fit: BoxFit.cover)),
-            margin: EdgeInsets.zero,
             child: Column(
               children: [
                 Expanded(
                   child: Stack(
                     children: [
+                      Positioned(
+                          top: 10,
+                          child: Row(
+                            children: [
+                              Image.asset(
+                                'assets/images/clouds/cloud-1.png',
+                                width: size.width * 0.5,
+                              ),
+                              Image.asset(
+                                'assets/images/clouds/cloud-2.png',
+                                width: size.width * 0.5,
+                              ),
+                              // TODO animate clouds
+                              // Image.asset(
+                              //   'assets/images/clouds/cloud-3.png',
+                              //   width: size.width * 0.5,
+                              // ),
+                              // Image.asset(
+                              //   'assets/images/clouds/cloud-4.png',
+                              //   width: size.width * 0.5,
+                              // ),
+                            ],
+                          )),
                       SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
                         physics: const NeverScrollableScrollPhysics(),
-                        child: SizedBox(
-                          height: size.height * 2 - 150,
-                          child: ListWheelScrollView(
-                              physics: const BouncingScrollPhysics(),
-                              controller: scrollControllerRoute,
-                              clipBehavior: Clip.hardEdge,
-                              scrollBehavior: MyCustomScrollBehavior()
-                                ..copyWith(scrollbars: false), //TODO
-                              itemExtent: 200,
-                              squeeze: 1.1,
+                        controller: horizontalScrollController,
+                        child: Container(
+                          margin: EdgeInsets.zero,
+                          width: size.width * 1.5,
+                          child: SingleChildScrollView(
+                            physics: const NeverScrollableScrollPhysics(),
+                            child: Stack(
+                              children: [
+                                SizedBox(
+                                  height: size.height * 2 - 150,
+                                  child: ListWheelScrollView(
+                                      physics: const BouncingScrollPhysics(),
+                                      controller: scrollControllerRoute,
+                                      clipBehavior: Clip.hardEdge,
+                                      scrollBehavior: MyCustomScrollBehavior()
+                                        ..copyWith(scrollbars: false), //TODO
+                                      itemExtent: 200,
+                                      squeeze: 1.1,
 
-                              // clipBehavior: Clip.antiAlias,
-                              // offAxisFraction: 1.05,
-                              children: List.generate(
-                                100,
-                                (index) => Container(
-                                  decoration: const BoxDecoration(
-                                      image: DecorationImage(
-                                          image: AssetImage(
-                                              'assets/images/asphalt.jpg'),
-                                          fit: BoxFit.cover)),
-                                  height: 200,
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                          child: Container(
-                                        decoration: const BoxDecoration(
-                                            image: DecorationImage(
-                                                image: AssetImage(
-                                                    'assets/images/rocks.jpg'),
-                                                fit: BoxFit.cover)),
-                                        height: 200,
-                                      )),
-                                      Expanded(
-                                        flex: 3,
-                                        child: Stack(
-                                          alignment: Alignment.centerRight,
-                                          children: [
-                                            Center(
-                                              child: CustomPaint(
-                                                painter: PathLine(drawPath(
-                                                    size.width,
-                                                    index % 2 == 0)),
-                                              ),
+                                      // clipBehavior: Clip.antiAlias,
+                                      // offAxisFraction: 1.05,
+                                      children: List.generate(
+                                        100,
+                                        (index) => Container(
+                                          decoration: const BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.centerLeft,
+                                              end: Alignment.centerRight,
+                                              colors: [
+                                                Color(0xFF474747),
+                                                Color(0xFF2f2f2f),
+                                              ],
                                             ),
-                                            Center(
-                                              child: Padding(
-                                                padding: (index % 2 != 0)
-                                                    ? const EdgeInsets.only(
-                                                        left: 100)
-                                                    : const EdgeInsets.only(
-                                                        right: 100),
-                                                child: SizedBox(
-                                                  width: 80,
-                                                  child: AspectRatio(
-                                                    aspectRatio: 1,
+                                            // image: DecorationImage(
+                                            //     image: AssetImage(
+                                            //         'assets/images/backgrounds/asphalt.jpg'),
+                                            //     fit: BoxFit.cover),
+                                          ),
+                                          height: 200,
+                                          child: Row(
+                                            children: [
+                                              SizedBox(
+                                                  width: size.width * 0.4,
+                                                  child: Container(
+                                                    decoration:
+                                                        const BoxDecoration(
+                                                      gradient: LinearGradient(
+                                                        begin: Alignment
+                                                            .centerLeft,
+                                                        end: Alignment
+                                                            .centerRight,
+                                                        colors: [
+                                                          Color(0xFF474747),
+                                                          Color.fromARGB(255,
+                                                              111, 173, 139),
+                                                        ],
+                                                      ),
+
+                                                      // image: DecorationImage(
+                                                      //     image: AssetImage(
+                                                      //         'assets/images/backgrounds/rocks.jpg'),
+                                                      //     fit: BoxFit.cover),
+                                                    ),
+                                                    height: 200,
+                                                  )),
+                                              Column(
+                                                children: [
+                                                  Expanded(
                                                     child: Card(
-                                                      elevation: 5.0,
-                                                      shape: RoundedRectangleBorder(
-                                                          side:
-                                                              const BorderSide(
-                                                                  color: Colors
-                                                                      .green,
-                                                                  width: 1.0),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      100.0)),
-                                                      child: ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(
-                                                                    100.0),
-                                                        child: Center(
-                                                          child: Text(
-                                                              '${100 - index}'),
+                                                      elevation: 10,
+                                                      margin: EdgeInsets.only(
+                                                          top: 4),
+                                                      child: Container(
+                                                        color: Colors.black,
+                                                        width: 10,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    child: Card(
+                                                      elevation: 10,
+                                                      margin: EdgeInsets.only(
+                                                          top: 4),
+                                                      child: Container(
+                                                        color: Colors.yellow,
+                                                        width: 10,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              Expanded(
+                                                flex: 3,
+                                                child: Center(
+                                                  child: CustomPaint(
+                                                    painter: PathLine(drawPath(
+                                                        size.width,
+                                                        index % 2 == 0)),
+                                                  ),
+                                                ),
+                                              ),
+                                              Column(
+                                                children: [
+                                                  Expanded(
+                                                    child: Card(
+                                                      elevation: 10,
+                                                      margin: EdgeInsets.only(
+                                                          top: 4),
+                                                      child: Container(
+                                                        color: Colors.black,
+                                                        width: 10,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    child: Card(
+                                                      elevation: 10,
+                                                      margin: EdgeInsets.only(
+                                                          top: 4),
+                                                      child: Container(
+                                                        color: Colors.yellow,
+                                                        width: 10,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              SizedBox(
+                                                  width: size.width * 0.4,
+                                                  child: Container(
+                                                    decoration:
+                                                        const BoxDecoration(
+                                                      gradient: LinearGradient(
+                                                        begin: Alignment
+                                                            .centerLeft,
+                                                        end: Alignment
+                                                            .centerRight,
+                                                        colors: [
+                                                          Color.fromARGB(255,
+                                                              111, 173, 139),
+                                                          Color(0xFF474747),
+                                                        ],
+                                                      ),
+
+                                                      // image: DecorationImage(
+                                                      //     image: AssetImage(
+                                                      //         'assets/images/backgrounds/rocks.jpg'),
+                                                      //     fit: BoxFit.cover),
+                                                    ),
+                                                    height: 200,
+                                                  )),
+                                            ],
+                                          ),
+                                        ),
+                                      )),
+                                ),
+                                SizedBox(
+                                    height: size.height * 2 - 150,
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: ListWheelScrollView(
+                                            physics:
+                                                const BouncingScrollPhysics(),
+                                            controller: scrollController3D,
+                                            clipBehavior: Clip.hardEdge,
+                                            scrollBehavior:
+                                                MyCustomScrollBehavior()
+                                                  ..copyWith(
+                                                      scrollbars: false), //TODO
+                                            itemExtent: 200,
+                                            squeeze: 1.1,
+                                            children:
+                                                List.generate(100, (index) {
+                                              return Row(
+                                                children: [
+                                                  SizedBox(
+                                                    width: size.width * 0.15,
+                                                  ),
+                                                  RotatedBox(
+                                                    quarterTurns: 2,
+                                                    child: Transform(
+                                                      transform:
+                                                          Matrix4.rotationX(
+                                                              (math.pi / 2) -
+                                                                  (math.pi /
+                                                                      6)),
+                                                      child: RotatedBox(
+                                                        quarterTurns: 2,
+                                                        child: Image.asset(
+                                                          trees[
+                                                              rand.nextInt(8)],
+                                                          width:
+                                                              size.width * 0.3,
                                                         ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Expanded(
-                                          child: Container(
-                                        decoration: const BoxDecoration(
-                                            image: DecorationImage(
-                                                image: AssetImage(
-                                                    'assets/images/rocks.jpg'),
-                                                fit: BoxFit.cover)),
-                                        height: 200,
-                                      )),
-                                    ],
-                                  ),
-                                ),
-                              )),
-                        ),
-                      ),
-                      SingleChildScrollView(
-                        physics: const NeverScrollableScrollPhysics(),
-                        child: SizedBox(
-                            height: size.height * 2 - 150,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: ListWheelScrollView(
-                                    physics: const BouncingScrollPhysics(),
-                                    controller: scrollController3D1,
-                                    clipBehavior: Clip.hardEdge,
-                                    scrollBehavior: MyCustomScrollBehavior()
-                                      ..copyWith(scrollbars: false), //TODO
-                                    itemExtent: 200,
-                                    squeeze: 1.1,
-                                    children: List.generate(100, (index) {
-                                      return Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          RotatedBox(
-                                            quarterTurns: 2,
-                                            child: Transform(
-                                              transform: Matrix4.rotationX(
-                                                  (math.pi / 2) -
-                                                      (math.pi / 6)),
-                                              child: RotatedBox(
-                                                quarterTurns: 2,
-                                                child: Image.asset(
-                                                    'assets/images/tree.png'),
-                                              ),
-                                            ),
+                                                  Expanded(
+                                                      child: Row(
+                                                    mainAxisAlignment:
+                                                        ((index + 1) % 2 == 0)
+                                                            ? MainAxisAlignment
+                                                                .start
+                                                            : MainAxisAlignment
+                                                                .end,
+                                                    children: [
+                                                      RotatedBox(
+                                                        quarterTurns: 2,
+                                                        child: Transform(
+                                                          transform:
+                                                              Matrix4.rotationX(
+                                                                  (math.pi /
+                                                                          2) -
+                                                                      (math.pi /
+                                                                          5)),
+                                                          child: RotatedBox(
+                                                            quarterTurns: 2,
+                                                            child: Image.asset(
+                                                              trashes[rand
+                                                                  .nextInt(4)],
+                                                              width:
+                                                                  size.width *
+                                                                      0.3,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  )),
+                                                  RotatedBox(
+                                                    quarterTurns: 2,
+                                                    child: Transform(
+                                                      transform:
+                                                          Matrix4.rotationX(
+                                                              (math.pi / 2) -
+                                                                  (math.pi /
+                                                                      5)),
+                                                      child: RotatedBox(
+                                                        quarterTurns: 2,
+                                                        child: Image.asset(
+                                                          trees[
+                                                              rand.nextInt(8)],
+                                                          width:
+                                                              size.width * 0.3,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                    width: size.width * 0.15,
+                                                  ),
+                                                ],
+                                              );
+                                            }),
                                           ),
-                                          RotatedBox(
-                                            quarterTurns: 2,
-                                            child: Transform(
-                                              transform: Matrix4.rotationX(
-                                                  (math.pi / 2) -
-                                                      (math.pi / 6)),
-                                              child: RotatedBox(
-                                                quarterTurns: 2,
-                                                child: Image.asset(
-                                                    'assets/images/tree.png'),
-                                              ),
-                                            ),
+                                        )
+                                      ],
+                                    )),
+                                SizedBox(
+                                    height: size.height * 2 - 150,
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: ListWheelScrollView(
+                                            physics:
+                                                const BouncingScrollPhysics(),
+                                            controller: scrollController3D2,
+                                            clipBehavior: Clip.hardEdge,
+                                            scrollBehavior:
+                                                MyCustomScrollBehavior()
+                                                  ..copyWith(
+                                                      scrollbars: false), //TODO
+                                            itemExtent: 200,
+                                            squeeze: 1.1,
+                                            children:
+                                                List.generate(100, (index) {
+                                              return Row(
+                                                children: [
+                                                  SizedBox(
+                                                    width: size.width * 0.15,
+                                                  ),
+                                                  SizedBox(
+                                                    width: size.width * 0.3,
+                                                  ),
+                                                  Expanded(
+                                                    child: Center(
+                                                      child: Padding(
+                                                        padding: (index % 2 !=
+                                                                0)
+                                                            ? const EdgeInsets
+                                                                .only(left: 100)
+                                                            : const EdgeInsets
+                                                                .only(
+                                                                right: 100),
+                                                        child: LevelButton(
+                                                            index: index),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                    width: size.width * 0.3,
+                                                  ),
+                                                  SizedBox(
+                                                    width: size.width * 0.15,
+                                                  ),
+                                                ],
+                                              );
+                                            }),
                                           ),
-                                        ],
-                                      );
-                                    }),
-                                  ),
-                                )
+                                        )
+                                      ],
+                                    )),
                               ],
-                            )),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                )
+                ),
               ],
             ),
           ),
