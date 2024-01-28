@@ -43,6 +43,7 @@ class Item extends CircleComponent
     ..strokeWidth = 2
     ..style = PaintingStyle.stroke;
   Vector2 aimDirection = Vector2(0, 0);
+  Vector2 movementVector = Vector2(0, 0);
   Vector2 velocity = Vector2(0, 0);
   Vector2? dragStartPosition;
   Vector2? dragEndPosition;
@@ -67,11 +68,13 @@ class Item extends CircleComponent
   @override
   void update(double dt) {
     super.update(dt);
-
+    var oldPos = position;
     if (!isGrounded) {
-      velocity.y += gravity;
-      // print(velocity);
-      position += velocity * dt;
+      movementVector.y += gravity;
+      position += movementVector * dt;
+      velocity = (position - oldPos);
+      print(position);
+      // TODO find the velocity
     }
   }
 
@@ -89,8 +92,6 @@ class Item extends CircleComponent
     super.onCollisionEnd(other);
     if (other is Ground) {
       isGrounded = false;
-
-      print('off the ground');
     }
   }
 
@@ -107,14 +108,14 @@ class Item extends CircleComponent
     super.onDragUpdate(event);
     dragEndPosition = event.localEndPosition;
     aimDirection = (dragStartPosition! - dragEndPosition!).normalized();
+    aimDirection *= -1; // oppiste direction of the drag
   }
 
   @override
   void onDragEnd(DragEndEvent event) async {
     super.onDragEnd(event);
-    // velocity = aimDirection * shootForce;
-    // print(velocity);
-    // y -= 10;
+    movementVector = aimDirection * -shootForce;
+    y -= 10;
 
     isAiming = false;
   }
@@ -123,36 +124,40 @@ class Item extends CircleComponent
   void render(Canvas canvas) {
     super.render(canvas);
     if (isAiming) {
-      var aimAngle = dragStartPosition!.angleToSigned(dragEndPosition!);
-      // drawRotatedObject(
-      //   canvas: canvas,
-      //   center: Offset(size.x / 2, size.y / 2),
-      //   angle: aimAngle,
-      //   drawFunction: () => canvas.drawPath(aimPath, aimPainter),
-      // );
-      // var aimPosition = size / 2;
-      dragStartPosition ??= Vector2(0, 0);
-      // final path = Path()
-      //   ..moveTo(dragStartPosition!.x, dragStartPosition!.y)
-      //   ..lineTo(dragStartPosition!.x + 100, dragStartPosition!.y + 100);
-      final arc = Rect.fromPoints(
-          Offset(dragStartPosition!.x, dragStartPosition!.y),
-          Offset(dragStartPosition!.x + 100, dragStartPosition!.y + 100));
-      canvas.drawArc(arc, 0.0, -(2 * math.pi * 50) / 100, false, aimPainter);
+      // calculating aiming angle
+      // I think there is an easy way but ..
+      var aimAngle = math.atan((aimDirection.y - dragEndPosition!.y) /
+              (aimDirection.x - dragEndPosition!.x)) *
+          -1;
+      // print(aimAngle * 180 / math.pi);
+
+      Path path = Path();
+      path.moveTo(dragStartPosition!.x, dragStartPosition!.y);
+      // calculate init spead
+      var velocity = aimDirection * -shootForce / 60;
+
+      // calculate horizontal distance
+      var horizontalDistance = 2 *
+          velocity.length2 *
+          math.sin(aimAngle) *
+          math.cos(aimAngle) /
+          gravity;
+      // print('horizontal distance ${horizontalDistance.round()}');
+      // maximum height
+      var maxHeight = math.pow(velocity.x, 2) *
+          math.pow(math.sin(aimAngle), 2) /
+          (2 * gravity);
+      path.quadraticBezierTo(
+          dragStartPosition!.x + horizontalDistance / 2,
+          dragStartPosition!.y - maxHeight,
+          dragStartPosition!.x + horizontalDistance,
+          dragStartPosition!.y + 200);
+      // for (var child in game.children) {
+      //   if (child is Ground) {
+      //     path.addOval(child);
+      //   }
+      // }
+      canvas.drawPath(path, aimPainter);
     }
   }
-
-  // void drawRotatedObject({
-  //   required Canvas canvas,
-  //   required Offset center,
-  //   required double angle,
-  //   required VoidCallback drawFunction,
-  // }) {
-  //   canvas.save();
-  //   // canvas.translate(center.dx, center.dy);
-  //   // canvas.rotate(angle);
-  //   // canvas.translate(-center.dx, -center.dy);
-  //   drawFunction();
-  //   canvas.restore();
-  // }
 }
