@@ -2,6 +2,7 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/extensions.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' as material;
 import 'package:flutter/painting.dart';
 import 'package:flutter_game/aim_game_src/aim_game.dart';
@@ -43,12 +44,13 @@ class Item extends CircleComponent
     ..strokeWidth = 2
     ..style = PaintingStyle.stroke;
   Vector2 aimDirection = Vector2(0, 0);
-  Vector2 movementVector = Vector2(0, 0);
-  Vector2 velocity = Vector2(0, 0);
+  Vector2 movementDirection = Vector2(0, 0);
   Vector2? dragStartPosition;
   Vector2? dragEndPosition;
   bool isGrounded = false;
   bool isAiming = false;
+
+  double deltaTime = 0;
 
   @override
   Future<void> onLoad() async {
@@ -68,13 +70,12 @@ class Item extends CircleComponent
   @override
   void update(double dt) {
     super.update(dt);
-    var oldPos = position;
     if (!isGrounded) {
-      movementVector.y += gravity;
-      position += movementVector * dt;
-      velocity = (position - oldPos);
-      print(position);
-      // TODO find the velocity
+      movementDirection.y += gravity;
+      position += movementDirection * dt;
+    }
+    if (dt > 0) {
+      deltaTime = dt;
     }
   }
 
@@ -84,6 +85,9 @@ class Item extends CircleComponent
     super.onCollisionStart(intersectionPoints, other);
     if (other is Ground) {
       isGrounded = true;
+    } else {
+      // TODO remove this , it just to prevent item from going away
+      movementDirection = Vector2(0, 0);
     }
   }
 
@@ -108,13 +112,12 @@ class Item extends CircleComponent
     super.onDragUpdate(event);
     dragEndPosition = event.localEndPosition;
     aimDirection = (dragStartPosition! - dragEndPosition!).normalized();
-    aimDirection *= -1; // oppiste direction of the drag
   }
 
   @override
   void onDragEnd(DragEndEvent event) async {
     super.onDragEnd(event);
-    movementVector = aimDirection * -shootForce;
+    movementDirection = aimDirection * shootForce;
     y -= 10;
 
     isAiming = false;
@@ -124,27 +127,30 @@ class Item extends CircleComponent
   void render(Canvas canvas) {
     super.render(canvas);
     if (isAiming) {
+      var initVelocity = aimDirection * shootForce * 0.1; // TODO
+      print(
+          'initial velocity x:${initVelocity.x.round()} y:${initVelocity.y.round()}');
+
+      var movementDirection = aimDirection * shootForce;
       // calculating aiming angle
       // I think there is an easy way but ..
-      var aimAngle = math.atan((aimDirection.y - dragEndPosition!.y) /
-              (aimDirection.x - dragEndPosition!.x)) *
+      var aimAngle = math.atan((dragStartPosition!.y - movementDirection.y) /
+              (dragStartPosition!.x - movementDirection.x)) *
           -1;
-      // print(aimAngle * 180 / math.pi);
+      print(aimAngle * 180 / math.pi);
 
       Path path = Path();
       path.moveTo(dragStartPosition!.x, dragStartPosition!.y);
-      // calculate init spead
-      var velocity = aimDirection * -shootForce / 60;
 
       // calculate horizontal distance
       var horizontalDistance = 2 *
-          velocity.length2 *
+          initVelocity.length2 *
           math.sin(aimAngle) *
           math.cos(aimAngle) /
           gravity;
-      // print('horizontal distance ${horizontalDistance.round()}');
+      print('horizontal distance ${horizontalDistance.round()}');
       // maximum height
-      var maxHeight = math.pow(velocity.x, 2) *
+      var maxHeight = math.pow(initVelocity.x, 2) *
           math.pow(math.sin(aimAngle), 2) /
           (2 * gravity);
       path.quadraticBezierTo(

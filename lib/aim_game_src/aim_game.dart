@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flame/cache.dart';
+import 'package:flame/collisions.dart';
 import 'package:flame/extensions.dart' as ext;
 
 import 'package:flame/components.dart';
@@ -57,6 +58,13 @@ class AimGame extends FlameGame with HasCollisionDetection {
       add(Ground(
           size: Vector2(obj.width, obj.height),
           position: Vector2(obj.x, obj.y)));
+    }
+    final wallGroup = homeMap.tileMap.getLayer<ObjectGroup>('wall');
+    for (var obj in wallGroup!.objects) {
+      add(PositionComponent(
+          size: Vector2(obj.width, obj.height),
+          position: Vector2(obj.x, obj.y),
+          children: [RectangleHitbox()]));
     }
     // double mapWidth = 32.0 * homeMap.tileMap.map.width;
     // double mapHeight = 32.0 * homeMap.tileMap.map.height;
