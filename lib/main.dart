@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-
-import 'pages/game2_page.dart';
+import 'pages/aim_shoot_game_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const Game2Page());
-  // GetMaterialApp(
+  runApp(const AimShootGamePage());
+  // const GetMaterialApp(
   //     debugShowCheckedModeBanner: false, home: HomePage()));
 }
 

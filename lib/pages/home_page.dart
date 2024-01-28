@@ -100,7 +100,7 @@ class _HomePageState extends State<HomePage> {
           body: Container(
             decoration: const BoxDecoration(
                 image: DecorationImage(
-                    image: AssetImage('assets/images/backgrounds/sky.jpg'),
+                    image: AssetImage('assets/images/backgrounds/BG.png'),
                     fit: BoxFit.cover)),
             child: Column(
               children: [
@@ -193,7 +193,7 @@ class _HomePageState extends State<HomePage> {
 
                                                       // image: DecorationImage(
                                                       //     image: AssetImage(
-                                                      //         'assets/images/backgrounds/rocks.jpg'),
+                                                      //         'assets/images/tiles/5.png'),
                                                       //     fit: BoxFit.cover),
                                                     ),
                                                     height: 200,
