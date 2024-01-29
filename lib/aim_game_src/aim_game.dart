@@ -8,10 +8,10 @@ import 'package:flame/extensions.dart' as ext;
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flame_tiled/flame_tiled.dart';
-import 'package:flutter/material.dart';
 
 import 'components/components.dart';
 import 'components/ground.dart';
+import 'components/slingshot.dart';
 
 enum PlayState { loading, playing, gameOver, won } // Add this enumeration
 
@@ -22,13 +22,6 @@ class AimGame extends FlameGame with HasCollisionDetection {
   // List<Item> itemsToRemove = [];
   Item? selectedItem;
   bool isProcessingMove = false;
-
-  @override
-  ext.Color backgroundColor() {
-    // remove background black color
-    return Colors.transparent;
-  }
-
   final rand = math.Random();
 
   @override
@@ -56,6 +49,7 @@ class AimGame extends FlameGame with HasCollisionDetection {
     final obstacleGroup = homeMap.tileMap.getLayer<ObjectGroup>('ground');
     for (var obj in obstacleGroup!.objects) {
       add(Ground(
+          fraction: 0.01,
           size: Vector2(obj.width, obj.height),
           position: Vector2(obj.x, obj.y)));
     }
@@ -66,11 +60,14 @@ class AimGame extends FlameGame with HasCollisionDetection {
           position: Vector2(obj.x, obj.y),
           children: [RectangleHitbox()]));
     }
-    // double mapWidth = 32.0 * homeMap.tileMap.map.width;
-    // double mapHeight = 32.0 * homeMap.tileMap.map.height;
-    // camera.viewport =
-    //     FixedResolutionViewport(resolution: Vector2(mapWidth, mapHeight));
-    world.add(Item(Vector2(350, 0), image: itemsIcons[0], type: itemsTypes[0]));
+    var testItem = Item(Vector2(80, size.y - 100),
+        image: itemsIcons[0], type: itemsTypes[0]);
+    var slingshot = Slingshot(
+      Vector2(150, size.y - 50),
+    );
+    await world.add(testItem);
+    await world.add(slingshot);
+    slingshot.setSelectedItem(testItem);
   }
 
   // @override
