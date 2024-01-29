@@ -49,7 +49,7 @@ class AimGame extends FlameGame with HasCollisionDetection {
     final obstacleGroup = homeMap.tileMap.getLayer<ObjectGroup>('ground');
     for (var obj in obstacleGroup!.objects) {
       add(Ground(
-          fraction: 0.01,
+          fraction: 10,
           size: Vector2(obj.width, obj.height),
           position: Vector2(obj.x, obj.y)));
     }

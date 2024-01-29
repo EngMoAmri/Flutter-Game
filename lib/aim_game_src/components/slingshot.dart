@@ -7,7 +7,7 @@ import 'package:flutter/painting.dart';
 import 'package:flutter_game/aim_game_src/aim_game.dart';
 
 import 'item.dart';
-// import 'dart:math' as math;
+import 'dart:math' as math;
 
 class Slingshot extends CircleComponent
     with DragCallbacks, CollisionCallbacks, HasGameRef<AimGame> {
@@ -23,6 +23,9 @@ class Slingshot extends CircleComponent
   Vector2 aimDirection = Vector2(0, 0);
   Vector2 movementDirection = Vector2(0, 0);
   Vector2? dragStartPosition;
+  double maxDragDistance = 100;
+  double minDragDistance = 10;
+  double shootPowerScale = 0;
 
   Vector2? dragEndPosition;
   bool isAiming = false;
@@ -73,7 +76,7 @@ class Slingshot extends CircleComponent
     var maxPoints = 300;
     removeAll(children.query<RectangleComponent>());
     var pos = dragStartPosition!;
-    var vel = dir * shootForce;
+    var vel = dir * shootForce * shootPowerScale;
     for (int i = 0; i < maxPoints; i++) {
       add(RectangleComponent(
           position: pos,
@@ -102,19 +105,44 @@ class Slingshot extends CircleComponent
       isAiming = false;
       return;
     }
-    dragEndPosition = event.localEndPosition;
-    selectedItem!.position = dragEndPosition!;
-    aimDirection = (dragStartPosition! - dragEndPosition!).normalized();
+    Vector2 endPosition = event.localEndPosition;
+    var length = math.sqrt(math.pow(endPosition.x - dragStartPosition!.x, 2) +
+        math.pow(endPosition.y - dragStartPosition!.y, 2));
+    if (length < minDragDistance) {
+      isAiming = false;
+      selectedItem!.position = dragStartPosition!;
+      shootPowerScale = 0;
+      removeAll(children.query<RectangleComponent>());
+    } else if (length > maxDragDistance) {
+      isAiming = true;
+      shootPowerScale = 1;
+      var itemEndPoint = endPosition / (length / 100);
+      dragEndPosition = itemEndPoint;
+      selectedItem!.position = dragEndPosition!;
+      aimDirection = (dragStartPosition! - dragEndPosition!).normalized();
+    } else {
+      isAiming = true;
+      shootPowerScale = length / maxDragDistance;
+
+      dragEndPosition = event.localEndPosition;
+      selectedItem!.position = dragEndPosition!;
+      aimDirection = (dragStartPosition! - dragEndPosition!).normalized();
+    }
   }
 
   @override
   void onDragEnd(DragEndEvent event) async {
     super.onDragEnd(event);
+
+    if (isAiming == false) {
+      return;
+    }
     if (selectedItem == null) {
       isAiming = false;
       return;
     }
-    movementDirection = aimDirection * shootForce;
+
+    movementDirection = aimDirection * shootForce * shootPowerScale;
     isAiming = false;
     throwSelectedItem();
     await Future.delayed(const Duration(milliseconds: 20));

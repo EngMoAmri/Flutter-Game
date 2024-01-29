@@ -34,7 +34,6 @@ class Item extends CircleComponent
   Future<void> onLoad() async {
     super.onLoad();
     size = Vector2(itemSize, itemSize) * 0.8;
-
     add(SpriteComponent(
         size: size,
         sprite: Sprite(
@@ -51,10 +50,8 @@ class Item extends CircleComponent
     if (!isGrounded && useGravity) {
       movementDirection.y += gravity;
       position += movementDirection * dt;
-      // TODO friction
     } else if (isGrounded &&
         (movementDirection.x > 1 || movementDirection.x < -1)) {
-      // this is fraction
       position.x += movementDirection.x * dt;
     }
   }
@@ -65,8 +62,7 @@ class Item extends CircleComponent
     super.onCollisionStart(intersectionPoints, other);
     if (other is Ground) {
       isGrounded = true;
-    }
-    if (intersectionPoints.first.x <= position.x ||
+    } else if (intersectionPoints.first.x <= position.x ||
         intersectionPoints.first.x >= position.x + size.x) {
       movementDirection.x = -movementDirection.x;
     }
@@ -77,7 +73,8 @@ class Item extends CircleComponent
     super.onCollision(intersectionPoints, other);
     // fraction
     if (other is Ground) {
-      if (movementDirection.x > 1 || movementDirection.x < -1) {
+      if (movementDirection.x > other.fraction ||
+          movementDirection.x < -other.fraction) {
         if (movementDirection.x > 0) {
           movementDirection.x -= other.fraction;
         } else {
