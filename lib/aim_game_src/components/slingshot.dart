@@ -60,6 +60,7 @@ class Slingshot extends CircleComponent
   void setSelectedItem(Item item) {
     // add(item);
     item.useGravity = false;
+    item.useCollisions = false;
     selectedItem = item;
     selectedItem!.position = dragStartPosition!;
   }
@@ -68,10 +69,12 @@ class Slingshot extends CircleComponent
     selectedItem!.position = dragStartPosition!;
     selectedItem!.movementDirection = movementDirection;
     selectedItem!.useGravity = true;
+    selectedItem!.useCollisions = true;
     selectedItem = null;
     // TODO delete below testing
     await Future.delayed(const Duration(seconds: 5));
     game.setSelectedItemForTest();
+    game.camera.moveTo(Vector2(game.slingshot.x - 200, 0));
   }
 
   void updateTrajectory(Vector2 dir, double dt) {
@@ -120,8 +123,9 @@ class Slingshot extends CircleComponent
     } else if (length > maxDragDistance) {
       isAiming = true;
       shootPowerScale = 1;
-      // TODO calculate the end positon
-      dragEndPosition = event.canvasEndPosition * (length / maxDragDistance);
+      Vector2 endPoint = event.canvasEndPosition;
+      endPoint.lerp(dragStartPosition!, 1 - (maxDragDistance / length));
+      dragEndPosition = endPoint;
       selectedItem!.position = dragEndPosition!;
       aimDirection = (dragStartPosition! - dragEndPosition!).normalized();
     } else {

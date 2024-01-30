@@ -28,6 +28,7 @@ class Item extends CircleComponent
   ItemType type; // this is not final coz it maight  change
   double gravity = 5;
   bool useGravity = true; // this to prevent gravity when it is on slingshot
+  bool useCollisions = true; // this to prevent gravity when it is on slingshot
   Vector2 movementDirection = Vector2(0, 0);
   bool isGrounded = false;
   @override
@@ -55,6 +56,12 @@ class Item extends CircleComponent
         (movementDirection.x > 1 || movementDirection.x < -1)) {
       position.x += movementDirection.x * dt;
     }
+    // Prevent ember from going beyond half screen.
+    if (position.x + 64 >= game.size.x / 2 && movementDirection.x > 0) {
+      game.camera.moveBy(
+        Vector2(movementDirection.x * dt, 0),
+      );
+    }
   }
 
   @override
@@ -62,13 +69,11 @@ class Item extends CircleComponent
       Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollisionStart(intersectionPoints, other);
 
-    if (other is Ground) {
+    if (other is Ground && useCollisions) {
       var x1 = intersectionPoints.first.x;
       var x2 = intersectionPoints.last.x;
       var y1 = intersectionPoints.first.y;
       var y2 = intersectionPoints.last.y;
-      print('$y1, $y2');
-      print('${y}');
       // TODO deal with this perfectly
       if (y1 <= position.y || y2 <= position.y) {
         movementDirection.y = -movementDirection.y;

@@ -3,7 +3,6 @@ import 'dart:async';
 
 import 'package:flame/cache.dart';
 import 'package:flame/camera.dart';
-import 'package:flame/experimental.dart';
 import 'package:flame/extensions.dart' as ext;
 
 import 'package:flame/components.dart';
@@ -12,8 +11,6 @@ import 'package:flame_tiled/flame_tiled.dart';
 import 'package:flutter_game/aim_game_src/config.dart';
 
 import 'components/components.dart';
-import 'components/ground.dart';
-import 'components/slingshot.dart';
 
 enum PlayState { loading, playing, gameOver, won } // Add this enumeration
 
@@ -51,10 +48,10 @@ class AimGame extends FlameGame with HasCollisionDetection {
     ]);
     homeMap = await TiledComponent.load('throwing-map-1.tmx', Vector2.all(32));
 
-    add(homeMap);
+    await world.add(homeMap);
     final obstacleGroup = homeMap.tileMap.getLayer<ObjectGroup>('ground');
     for (var obj in obstacleGroup!.objects) {
-      add(Ground(
+      await world.add(Ground(
           fraction: 10,
           size: Vector2(obj.width, obj.height),
           position: Vector2(obj.x, obj.y)));
@@ -65,10 +62,6 @@ class AimGame extends FlameGame with HasCollisionDetection {
     await world.add(testItem!);
     await world.add(slingshot);
     slingshot.setSelectedItem(testItem!);
-    // camera.follow(testItem!, horizontalOnly: true);
-    // camera.setBounds(
-    //   Rectangle.fromLTRB(0, 0, homeMap.width, homeMap.height),
-    // );
   }
 
   // TODO delete this
