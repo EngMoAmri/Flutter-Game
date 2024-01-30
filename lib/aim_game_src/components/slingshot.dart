@@ -19,14 +19,14 @@ class Slingshot extends CircleComponent
         );
   Item? selectedItem;
   double gravity = 5;
-  double shootForce = 300;
+  double shootForce = 500;
   Vector2 aimDirection = Vector2(0, 0);
   Vector2 movementDirection = Vector2(0, 0);
-  Vector2? dragStartPosition;
   double maxDragDistance = 100;
   double minDragDistance = 10;
   double shootPowerScale = 0;
 
+  Vector2? dragStartPosition;
   Vector2? dragEndPosition;
   bool isAiming = false;
   @override
@@ -40,7 +40,7 @@ class Slingshot extends CircleComponent
         sprite: Sprite(
           await Images().load('items/slingshot.png'),
         )));
-    dragStartPosition = Vector2(size.x / 2, 0);
+    dragStartPosition = Vector2(position.x - 20, position.y - 50);
   }
 
   double timeElapsed = 0;
@@ -58,24 +58,27 @@ class Slingshot extends CircleComponent
   }
 
   void setSelectedItem(Item item) {
-    add(item);
+    // add(item);
     item.useGravity = false;
     selectedItem = item;
     selectedItem!.position = dragStartPosition!;
   }
 
-  void throwSelectedItem() {
-    // selectedItem!.removeFromParent();
+  void throwSelectedItem() async {
     selectedItem!.position = dragStartPosition!;
     selectedItem!.movementDirection = movementDirection;
     selectedItem!.useGravity = true;
     selectedItem = null;
+    // TODO delete below testing
+    await Future.delayed(const Duration(seconds: 5));
+    game.setSelectedItemForTest();
   }
 
   void updateTrajectory(Vector2 dir, double dt) {
     var maxPoints = 300;
     removeAll(children.query<RectangleComponent>());
-    var pos = dragStartPosition!;
+    var pos = Vector2((size.x / 2) - 20,
+        0); // TODO this position is approximate I think I should make the correct position
     var vel = dir * shootForce * shootPowerScale;
     for (int i = 0; i < maxPoints; i++) {
       add(RectangleComponent(
@@ -101,13 +104,14 @@ class Slingshot extends CircleComponent
   @override
   void onDragUpdate(DragUpdateEvent event) {
     super.onDragUpdate(event);
+
     if (selectedItem == null) {
       isAiming = false;
       return;
     }
-    Vector2 endPosition = event.localEndPosition;
-    var length = math.sqrt(math.pow(endPosition.x - dragStartPosition!.x, 2) +
-        math.pow(endPosition.y - dragStartPosition!.y, 2));
+    var length = math.sqrt(
+        math.pow(event.canvasEndPosition.x - dragStartPosition!.x, 2) +
+            math.pow(event.canvasEndPosition.y - dragStartPosition!.y, 2));
     if (length < minDragDistance) {
       isAiming = false;
       selectedItem!.position = dragStartPosition!;
@@ -116,15 +120,15 @@ class Slingshot extends CircleComponent
     } else if (length > maxDragDistance) {
       isAiming = true;
       shootPowerScale = 1;
-      var itemEndPoint = endPosition / (length / 100);
-      dragEndPosition = itemEndPoint;
+      // TODO calculate the end positon
+      dragEndPosition = event.canvasEndPosition * (length / maxDragDistance);
       selectedItem!.position = dragEndPosition!;
       aimDirection = (dragStartPosition! - dragEndPosition!).normalized();
     } else {
       isAiming = true;
       shootPowerScale = length / maxDragDistance;
 
-      dragEndPosition = event.localEndPosition;
+      dragEndPosition = event.canvasEndPosition;
       selectedItem!.position = dragEndPosition!;
       aimDirection = (dragStartPosition! - dragEndPosition!).normalized();
     }

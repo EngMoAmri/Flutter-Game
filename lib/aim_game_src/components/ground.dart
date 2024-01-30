@@ -10,6 +10,8 @@ class Ground extends PositionComponent {
   @override
   FutureOr<void> onLoad() async {
     await super.onLoad();
+
+    debugMode = true;
     add(RectangleHitbox());
   }
 }

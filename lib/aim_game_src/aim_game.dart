@@ -1,13 +1,15 @@
 import 'dart:async';
-import 'dart:math' as math;
+// import 'dart:math' as math;
 
 import 'package:flame/cache.dart';
-import 'package:flame/collisions.dart';
+import 'package:flame/camera.dart';
+import 'package:flame/experimental.dart';
 import 'package:flame/extensions.dart' as ext;
 
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flame_tiled/flame_tiled.dart';
+import 'package:flutter_game/aim_game_src/config.dart';
 
 import 'components/components.dart';
 import 'components/ground.dart';
@@ -19,14 +21,17 @@ class AimGame extends FlameGame with HasCollisionDetection {
   late TiledComponent homeMap;
   List<ext.Image> itemsIcons = [];
   List<ItemType> itemsTypes = [];
-  // List<Item> itemsToRemove = [];
-  Item? selectedItem;
-  bool isProcessingMove = false;
-  final rand = math.Random();
+  Item? testItem;
+  Slingshot slingshot = Slingshot(
+    Vector2(200, gameHeight - 50),
+  );
 
   @override
   FutureOr<void> onLoad() async {
     super.onLoad();
+
+    // debugMode = true;
+    // camera.world = world;
     camera.viewfinder.anchor = Anchor.topLeft;
     final imagesLoader = Images();
 
@@ -44,7 +49,8 @@ class AimGame extends FlameGame with HasCollisionDetection {
       ItemType.pan,
       ItemType.bottle,
     ]);
-    homeMap = await TiledComponent.load('map.tmx', Vector2.all(32));
+    homeMap = await TiledComponent.load('throwing-map-1.tmx', Vector2.all(32));
+
     add(homeMap);
     final obstacleGroup = homeMap.tileMap.getLayer<ObjectGroup>('ground');
     for (var obj in obstacleGroup!.objects) {
@@ -53,27 +59,35 @@ class AimGame extends FlameGame with HasCollisionDetection {
           size: Vector2(obj.width, obj.height),
           position: Vector2(obj.x, obj.y)));
     }
-    final wallGroup = homeMap.tileMap.getLayer<ObjectGroup>('wall');
-    for (var obj in wallGroup!.objects) {
-      add(PositionComponent(
-          size: Vector2(obj.width, obj.height),
-          position: Vector2(obj.x, obj.y),
-          children: [RectangleHitbox()]));
-    }
-    var testItem = Item(Vector2(80, size.y - 100),
+    testItem = Item(Vector2(80, gameHeight - 100),
         image: itemsIcons[0], type: itemsTypes[0]);
-    var slingshot = Slingshot(
-      Vector2(150, size.y - 50),
-    );
-    await world.add(testItem);
+    testItem!.radius = (itemSize / 2) - 8;
+    await world.add(testItem!);
     await world.add(slingshot);
-    slingshot.setSelectedItem(testItem);
+    slingshot.setSelectedItem(testItem!);
+    // camera.follow(testItem!, horizontalOnly: true);
+    // camera.setBounds(
+    //   Rectangle.fromLTRB(0, 0, homeMap.width, homeMap.height),
+    // );
   }
 
-  // @override
-  // void onGameResize(ext.Vector2 size) {
-  //   gameWidth = size.x;
-  //   gameHeight = size.y;
-  //   super.onGameResize(Vector2(gameWidth, gameHeight));
-  // }
+  // TODO delete this
+  void setSelectedItemForTest() {
+    slingshot.setSelectedItem(testItem!);
+  }
+
+  @override
+  void onGameResize(ext.Vector2 size) {
+    gameWidth = size.x;
+    gameHeight = size.y;
+    camera.viewport =
+        FixedResolutionViewport(resolution: Vector2(gameWidth, gameHeight));
+    slingshot.position = Vector2(200, gameHeight - 50);
+    // if (testItem != null) {
+    //   camera.follow(testItem!, horizontalOnly: true);
+    // }
+    // testItem?.size = Vector2(itemSize, itemSize);
+    // testItem?.radius = (itemSize / 2) - 8;
+    super.onGameResize(Vector2(gameWidth, gameHeight));
+  }
 }

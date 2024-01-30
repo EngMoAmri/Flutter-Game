@@ -33,14 +33,15 @@ class Item extends CircleComponent
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    size = Vector2(itemSize, itemSize) * 0.8;
+    debugMode = true;
+    size = Vector2(itemSize, itemSize);
     add(SpriteComponent(
         size: size,
         sprite: Sprite(
           image,
         )));
     add(CircleHitbox(
-      radius: radius,
+      radius: radius - 2,
     ));
   }
 
@@ -60,11 +61,25 @@ class Item extends CircleComponent
   void onCollisionStart(
       Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollisionStart(intersectionPoints, other);
+
     if (other is Ground) {
-      isGrounded = true;
-    } else if (intersectionPoints.first.x <= position.x ||
-        intersectionPoints.first.x >= position.x + size.x) {
-      movementDirection.x = -movementDirection.x;
+      var x1 = intersectionPoints.first.x;
+      var x2 = intersectionPoints.last.x;
+      var y1 = intersectionPoints.first.y;
+      var y2 = intersectionPoints.last.y;
+      print('$y1, $y2');
+      print('${y}');
+      // TODO deal with this perfectly
+      if (y1 <= position.y || y2 <= position.y) {
+        movementDirection.y = -movementDirection.y;
+      } else if ((x1 - x2).abs() > 2) {
+        isGrounded = true;
+      } else if (x1 <= position.x ||
+          x2 <= position.x ||
+          x1 >= position.x + size.x ||
+          x2 >= position.x + size.x) {
+        movementDirection.x = -movementDirection.x;
+      }
     }
   }
 
