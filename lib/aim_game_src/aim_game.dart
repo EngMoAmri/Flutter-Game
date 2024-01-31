@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flame/cache.dart';
 import 'package:flame/camera.dart';
+import 'package:flame/events.dart';
 import 'package:flame/extensions.dart' as ext;
 
 import 'package:flame/components.dart';
@@ -14,14 +15,55 @@ import 'components/components.dart';
 
 enum PlayState { loading, playing, gameOver, won } // Add this enumeration
 
-class AimGame extends FlameGame with HasCollisionDetection {
-  late TiledComponent homeMap;
+class AimGame extends FlameGame
+    with ScrollDetector, ScaleDetector, HasCollisionDetection {
+  TiledComponent? homeMap;
   List<ext.Image> itemsIcons = [];
+  late ext.Image bubble; // the items will be inside bubbles
   List<ItemType> itemsTypes = [];
   Item? testItem;
-  Slingshot slingshot = Slingshot(
-    Vector2(200, gameHeight - 50),
-  );
+  Slingshot? slingshot;
+  void clampZoom() {
+    camera.viewfinder.zoom = camera.viewfinder.zoom.clamp(0.05, 3.0);
+  }
+
+  static const zoomPerScrollUnit = 0.02;
+
+  @override
+  void onScroll(PointerScrollInfo info) {
+    camera.viewfinder.zoom +=
+        info.scrollDelta.global.y.sign * zoomPerScrollUnit;
+    clampZoom();
+  }
+
+  late double startZoom;
+
+  @override
+  void onScaleStart(info) {
+    startZoom = camera.viewfinder.zoom;
+  }
+
+  @override
+  void onScaleUpdate(ScaleUpdateInfo info) {
+    final currentScale = info.scale.global;
+    if (!currentScale.isIdentity()) {
+      camera.viewfinder.zoom = startZoom * currentScale.y;
+      clampZoom();
+    } else {
+      final delta = info.delta.global;
+      camera.viewfinder.position.translate(-delta.x, -delta.y);
+    }
+    // var newHeight =
+    //     (1 - camera.viewfinder.zoom) * (homeMap!.height - gameHeight) -
+    //         (homeMap!.height - gameHeight);
+    print(camera.viewport.size.y +
+        (camera.viewfinder.zoom * camera.viewport.size.y));
+// TODO
+    camera.moveTo(Vector2(
+        camera.viewport.position.x,
+        camera.viewport.size.y +
+            (camera.viewfinder.zoom * camera.viewport.size.y)));
+  }
 
   @override
   FutureOr<void> onLoad() async {
@@ -30,6 +72,7 @@ class AimGame extends FlameGame with HasCollisionDetection {
     // debugMode = true;
     // camera.world = world;
     camera.viewfinder.anchor = Anchor.topLeft;
+
     final imagesLoader = Images();
 
     itemsIcons.addAll([
@@ -39,6 +82,7 @@ class AimGame extends FlameGame with HasCollisionDetection {
       await imagesLoader.load('items/pan.png'),
       await imagesLoader.load('items/bottle.png'),
     ]);
+    bubble = await imagesLoader.load('bubble.png');
     itemsTypes.addAll([
       ItemType.can,
       ItemType.carton,
@@ -48,34 +92,47 @@ class AimGame extends FlameGame with HasCollisionDetection {
     ]);
     homeMap = await TiledComponent.load('throwing-map-1.tmx', Vector2.all(32));
 
-    await world.add(homeMap);
-    final obstacleGroup = homeMap.tileMap.getLayer<ObjectGroup>('ground');
+    await world.add(homeMap!);
+    final obstacleGroup = homeMap!.tileMap.getLayer<ObjectGroup>('ground');
     for (var obj in obstacleGroup!.objects) {
       await world.add(Ground(
           fraction: 10,
           size: Vector2(obj.width, obj.height),
           position: Vector2(obj.x, obj.y)));
     }
-    testItem = Item(Vector2(80, gameHeight - 100),
-        image: itemsIcons[0], type: itemsTypes[0]);
-    testItem!.radius = (itemSize / 2) - 8;
-    await world.add(testItem!);
-    await world.add(slingshot);
-    slingshot.setSelectedItem(testItem!);
+    // testItem = Item(Vector2(80, gameHeight - 100),
+    //     image: itemsIcons[0], type: itemsTypes[0]);
+    // testItem!.radius = (itemSize / 2) - 8;
+    // await world.add(testItem!);
+    // slingshot = Slingshot(
+    //   Vector2(200, homeMap!.height - 105),
+    // );
+    // await world.add(slingshot!);
+    // slingshot!.setSelectedItem(testItem!);
+    if (homeMap!.height > gameHeight) {
+      camera.moveTo(
+          Vector2(camera.viewport.position.x, homeMap!.height - gameHeight));
+    }
   }
 
   // TODO delete this
   void setSelectedItemForTest() {
-    slingshot.setSelectedItem(testItem!);
+    slingshot!.setSelectedItem(testItem!);
   }
 
   @override
   void onGameResize(ext.Vector2 size) {
     gameWidth = size.x;
     gameHeight = size.y;
+    if ((homeMap?.height ?? 0.0) > gameHeight) {
+      camera.moveTo(
+          Vector2(camera.viewport.position.x, homeMap!.height - gameHeight));
+    }
     camera.viewport =
         FixedResolutionViewport(resolution: Vector2(gameWidth, gameHeight));
-    slingshot.position = Vector2(200, gameHeight - 50);
+    if (slingshot != null) {
+      slingshot!.position = Vector2(200, homeMap!.height - 105);
+    }
     // if (testItem != null) {
     //   camera.follow(testItem!, horizontalOnly: true);
     // }

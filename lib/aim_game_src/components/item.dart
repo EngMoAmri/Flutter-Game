@@ -21,7 +21,7 @@ class Item extends CircleComponent
   Item(Vector2 itemPosition, {required this.image, required this.type})
       : super(
           position: itemPosition,
-          paint: material.Paint()..color = material.Colors.white24,
+          paint: material.Paint()..color = material.Colors.transparent,
           anchor: Anchor.center,
         );
   Image image;
@@ -34,12 +34,16 @@ class Item extends CircleComponent
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    debugMode = true;
     size = Vector2(itemSize, itemSize);
     add(SpriteComponent(
         size: size,
         sprite: Sprite(
           image,
+        )));
+    add(SpriteComponent(
+        size: size,
+        sprite: Sprite(
+          game.bubble,
         )));
     add(CircleHitbox(
       radius: radius - 2,
@@ -56,11 +60,23 @@ class Item extends CircleComponent
         (movementDirection.x > 1 || movementDirection.x < -1)) {
       position.x += movementDirection.x * dt;
     }
+    Vector2? cameraMovement;
     // Prevent ember from going beyond half screen.
-    if (position.x + 64 >= game.size.x / 2 && movementDirection.x > 0) {
-      game.camera.moveBy(
-        Vector2(movementDirection.x * dt, 0),
-      );
+    if ((position.x + 64 >= game.size.x / 2) &&
+        (position.x + 64 <= game.homeMap!.width - game.size.x / 2) &&
+        movementDirection.x > 0) {
+      cameraMovement = Vector2(movementDirection.x * dt, 0);
+    }
+    if ((position.y + 64 >= game.size.y / 2) &&
+        (position.y + 64 <= game.homeMap!.height - game.size.y / 2)) {
+      if (cameraMovement != null) {
+        cameraMovement.y = movementDirection.y * dt;
+      } else {
+        cameraMovement = Vector2(0, movementDirection.y * dt);
+      }
+    }
+    if (cameraMovement != null) {
+      game.camera.moveBy(cameraMovement);
     }
   }
 

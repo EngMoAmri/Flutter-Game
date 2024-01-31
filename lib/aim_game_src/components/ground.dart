@@ -11,7 +11,6 @@ class Ground extends PositionComponent {
   FutureOr<void> onLoad() async {
     await super.onLoad();
 
-    debugMode = true;
     add(RectangleHitbox());
   }
 }

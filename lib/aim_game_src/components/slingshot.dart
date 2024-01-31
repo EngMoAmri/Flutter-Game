@@ -3,23 +3,24 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart' as material;
-import 'package:flutter/painting.dart';
 import 'package:flutter_game/aim_game_src/aim_game.dart';
+import 'package:flutter_game/aim_game_src/components/components.dart';
 
-import 'item.dart';
 import 'dart:math' as math;
+
+import 'package:flutter_game/aim_game_src/config.dart';
 
 class Slingshot extends CircleComponent
     with DragCallbacks, CollisionCallbacks, HasGameRef<AimGame> {
   Slingshot(Vector2 currentPos)
       : super(
           position: currentPos,
-          paint: material.Paint()..color = material.Colors.white10,
+          paint: material.Paint()..color = material.Colors.transparent,
           anchor: Anchor.center,
         );
   Item? selectedItem;
   double gravity = 5;
-  double shootForce = 500;
+  double shootForce = 600;
   Vector2 aimDirection = Vector2(0, 0);
   Vector2 movementDirection = Vector2(0, 0);
   double maxDragDistance = 100;
@@ -32,15 +33,15 @@ class Slingshot extends CircleComponent
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    size = Vector2(120, 120);
+    size = Vector2(140, 140);
     add(SpriteComponent(
-        // priority: -1, //TODO hide the bottom of this
-        // position: size / 2,
         size: Vector2(100, 100),
+        position: size / 2,
+        anchor: Anchor.center,
         sprite: Sprite(
           await Images().load('items/slingshot.png'),
         )));
-    dragStartPosition = Vector2(position.x - 20, position.y - 50);
+    dragStartPosition = Vector2(position.x, position.y - 40);
   }
 
   double timeElapsed = 0;
@@ -74,20 +75,17 @@ class Slingshot extends CircleComponent
     // TODO delete below testing
     await Future.delayed(const Duration(seconds: 5));
     game.setSelectedItemForTest();
-    game.camera.moveTo(Vector2(game.slingshot.x - 200, 0));
+    game.camera.moveTo(Vector2(
+        game.camera.viewport.position.x, game.homeMap!.height - gameHeight));
   }
 
-  void updateTrajectory(Vector2 dir, double dt) {
+  void updateTrajectory(Vector2 dir, double dt) async {
     var maxPoints = 300;
-    removeAll(children.query<RectangleComponent>());
-    var pos = Vector2((size.x / 2) - 20,
-        0); // TODO this position is approximate I think I should make the correct position
+    game.world.removeAll(game.world.children.query<Trajectory>());
+    Vector2 pos = dragStartPosition!;
     var vel = dir * shootForce * shootPowerScale;
     for (int i = 0; i < maxPoints; i++) {
-      add(RectangleComponent(
-          position: pos,
-          paint: Paint()..color = material.Colors.red,
-          size: Vector2.all(4)));
+      await game.world.add(Trajectory(position: pos, size: Vector2.all(4)));
       vel.y += gravity;
       pos += vel * dt;
     }
@@ -100,7 +98,7 @@ class Slingshot extends CircleComponent
       isAiming = false;
       return;
     }
-    selectedItem!.position = dragStartPosition!;
+    // selectedItem!.position = dragStartPosition!;
     isAiming = true;
   }
 
@@ -112,18 +110,19 @@ class Slingshot extends CircleComponent
       isAiming = false;
       return;
     }
-    var length = math.sqrt(
-        math.pow(event.canvasEndPosition.x - dragStartPosition!.x, 2) +
-            math.pow(event.canvasEndPosition.y - dragStartPosition!.y, 2));
+    var endPoint = Vector2(event.canvasEndPosition.x,
+        event.canvasEndPosition.y + (game.homeMap!.height - gameHeight));
+    var length = math.sqrt(math.pow(endPoint.x - dragStartPosition!.x, 2) +
+        math.pow(endPoint.y - dragStartPosition!.y, 2));
     if (length < minDragDistance) {
       isAiming = false;
       selectedItem!.position = dragStartPosition!;
       shootPowerScale = 0;
-      removeAll(children.query<RectangleComponent>());
+      game.world.removeAll(game.world.children.query<Trajectory>());
     } else if (length > maxDragDistance) {
       isAiming = true;
       shootPowerScale = 1;
-      Vector2 endPoint = event.canvasEndPosition;
+      // Vector2 endPoint = event.canvasEndPosition;
       endPoint.lerp(dragStartPosition!, 1 - (maxDragDistance / length));
       dragEndPosition = endPoint;
       selectedItem!.position = dragEndPosition!;
@@ -132,7 +131,7 @@ class Slingshot extends CircleComponent
       isAiming = true;
       shootPowerScale = length / maxDragDistance;
 
-      dragEndPosition = event.canvasEndPosition;
+      dragEndPosition = endPoint;
       selectedItem!.position = dragEndPosition!;
       aimDirection = (dragStartPosition! - dragEndPosition!).normalized();
     }
@@ -154,6 +153,6 @@ class Slingshot extends CircleComponent
     isAiming = false;
     throwSelectedItem();
     await Future.delayed(const Duration(milliseconds: 20));
-    removeAll(children.query<RectangleComponent>());
+    game.world.removeAll(game.world.children.query<Trajectory>());
   }
 }
