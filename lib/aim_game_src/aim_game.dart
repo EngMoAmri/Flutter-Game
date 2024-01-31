@@ -31,9 +31,14 @@ class AimGame extends FlameGame
 
   @override
   void onScroll(PointerScrollInfo info) {
-    camera.viewfinder.zoom +=
-        info.scrollDelta.global.y.sign * zoomPerScrollUnit;
-    clampZoom();
+    if (homeMap == null) return;
+    if (camera.viewfinder.zoom +
+            (info.scrollDelta.global.y.sign * zoomPerScrollUnit) >=
+        (screenHeight / homeMap!.height)) {
+      camera.viewfinder.zoom +=
+          info.scrollDelta.global.y.sign * zoomPerScrollUnit;
+      clampZoom();
+    }
   }
 
   late double startZoom;
@@ -46,23 +51,26 @@ class AimGame extends FlameGame
   @override
   void onScaleUpdate(ScaleUpdateInfo info) {
     final currentScale = info.scale.global;
+    if (homeMap == null) return;
     if (!currentScale.isIdentity()) {
-      camera.viewfinder.zoom = startZoom * currentScale.y;
-      clampZoom();
+      if (startZoom * currentScale.y >= (screenHeight / homeMap!.height)) {
+        camera.viewfinder.zoom = startZoom * currentScale.y;
+        clampZoom();
+      }
     } else {
       final delta = info.delta.global;
-      camera.viewfinder.position.translate(-delta.x, -delta.y);
+      // this is my solution to laptop touchpad and it's working
+      if (camera.viewfinder.zoom + (delta.y.sign * zoomPerScrollUnit) >=
+          (screenHeight / homeMap!.height)) {
+        camera.viewfinder.zoom += delta.y.sign * zoomPerScrollUnit;
+        clampZoom();
+      }
     }
-    // var newHeight =
-    //     (1 - camera.viewfinder.zoom) * (homeMap!.height - gameHeight) -
-    //         (homeMap!.height - gameHeight);
-    print(camera.viewport.size.y +
-        (camera.viewfinder.zoom * camera.viewport.size.y));
-// TODO
-    camera.moveTo(Vector2(
-        camera.viewport.position.x,
-        camera.viewport.size.y +
-            (camera.viewfinder.zoom * camera.viewport.size.y)));
+    var cameraYOffset = (homeMap!.height - screenHeight) *
+        (camera.viewfinder.zoom - (screenHeight / homeMap!.height));
+    print(cameraYOffset);
+    camera.moveTo(Vector2(camera.viewport.position.x, cameraYOffset));
+    // TODO pin this to the bottom
   }
 
   @override
@@ -91,6 +99,7 @@ class AimGame extends FlameGame
       ItemType.bottle,
     ]);
     homeMap = await TiledComponent.load('throwing-map-1.tmx', Vector2.all(32));
+    camera.viewfinder.zoom = (screenHeight / homeMap!.height);
 
     await world.add(homeMap!);
     final obstacleGroup = homeMap!.tileMap.getLayer<ObjectGroup>('ground');
@@ -109,10 +118,10 @@ class AimGame extends FlameGame
     // );
     // await world.add(slingshot!);
     // slingshot!.setSelectedItem(testItem!);
-    if (homeMap!.height > gameHeight) {
-      camera.moveTo(
-          Vector2(camera.viewport.position.x, homeMap!.height - gameHeight));
-    }
+    // if (homeMap!.height > gameHeight) {
+    //   camera.moveTo(
+    //       Vector2(camera.viewport.position.x, homeMap!.height - gameHeight));
+    // }
   }
 
   // TODO delete this
@@ -122,14 +131,17 @@ class AimGame extends FlameGame
 
   @override
   void onGameResize(ext.Vector2 size) {
-    gameWidth = size.x;
-    gameHeight = size.y;
-    if ((homeMap?.height ?? 0.0) > gameHeight) {
-      camera.moveTo(
-          Vector2(camera.viewport.position.x, homeMap!.height - gameHeight));
+    // print('${homeMap!.height}, ${gameHeight}');
+    screenWidth = size.x;
+    screenHeight = size.y;
+    if ((homeMap?.height ?? 0.0) > screenHeight) {
+      camera.viewfinder.zoom = (screenHeight / homeMap!.height);
+
+      // camera.moveTo(
+      //     Vector2(camera.viewport.position.x, homeMap!.height - gameHeight));
     }
     camera.viewport =
-        FixedResolutionViewport(resolution: Vector2(gameWidth, gameHeight));
+        FixedResolutionViewport(resolution: Vector2(screenWidth, screenHeight));
     if (slingshot != null) {
       slingshot!.position = Vector2(200, homeMap!.height - 105);
     }
@@ -138,6 +150,6 @@ class AimGame extends FlameGame
     // }
     // testItem?.size = Vector2(itemSize, itemSize);
     // testItem?.radius = (itemSize / 2) - 8;
-    super.onGameResize(Vector2(gameWidth, gameHeight));
+    super.onGameResize(Vector2(screenWidth, screenHeight));
   }
 }

@@ -76,7 +76,7 @@ class Slingshot extends CircleComponent
     await Future.delayed(const Duration(seconds: 5));
     game.setSelectedItemForTest();
     game.camera.moveTo(Vector2(
-        game.camera.viewport.position.x, game.homeMap!.height - gameHeight));
+        game.camera.viewport.position.x, game.homeMap!.height - screenHeight));
   }
 
   void updateTrajectory(Vector2 dir, double dt) async {
@@ -111,7 +111,7 @@ class Slingshot extends CircleComponent
       return;
     }
     var endPoint = Vector2(event.canvasEndPosition.x,
-        event.canvasEndPosition.y + (game.homeMap!.height - gameHeight));
+        event.canvasEndPosition.y + (game.homeMap!.height - screenHeight));
     var length = math.sqrt(math.pow(endPoint.x - dragStartPosition!.x, 2) +
         math.pow(endPoint.y - dragStartPosition!.y, 2));
     if (length < minDragDistance) {

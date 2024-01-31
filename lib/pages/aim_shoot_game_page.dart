@@ -27,8 +27,8 @@ class _AimShootGamePageState extends State<AimShootGamePage> {
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
 
-    gameWidth = size.width;
-    gameHeight = size.height;
+    screenWidth = size.width;
+    screenHeight = size.height;
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -48,8 +48,8 @@ class _AimShootGamePageState extends State<AimShootGamePage> {
             //         fit: BoxFit.cover)),
             margin: EdgeInsets.zero,
             child: SizedBox(
-              width: gameWidth,
-              height: gameHeight,
+              width: screenWidth,
+              height: screenHeight,
               child: GameWidget(
                 game: game,
               ),
