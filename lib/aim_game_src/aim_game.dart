@@ -32,13 +32,25 @@ class AimGame extends FlameGame
   @override
   void onScroll(PointerScrollInfo info) {
     if (homeMap == null) return;
-    if (camera.viewfinder.zoom +
-            (info.scrollDelta.global.y.sign * zoomPerScrollUnit) >=
-        (screenHeight / homeMap!.height)) {
-      camera.viewfinder.zoom +=
-          info.scrollDelta.global.y.sign * zoomPerScrollUnit;
-      clampZoom();
+    var zoomDiff = (camera.viewfinder.zoom +
+        info.scrollDelta.global.y.sign * zoomPerScrollUnit -
+        (screenHeight / homeMap!.height));
+    // make the game minimum zoom in
+    if (zoomDiff < 0.65) {
+      if (
+          // make the game maximum zoom out
+          camera.viewfinder.zoom +
+                  (info.scrollDelta.global.y.sign * zoomPerScrollUnit) >=
+              (screenHeight / homeMap!.height)) {
+        camera.viewfinder.zoom +=
+            info.scrollDelta.global.y.sign * zoomPerScrollUnit;
+        clampZoom();
+      }
     }
+    // this is approximate calculation to move the camera to the bottom
+    var cameraYOffset = 32 * zoomDiff / 0.07;
+    // print(camera.viewfinder.zoom - (screenHeight / homeMap!.height));
+    camera.moveTo(Vector2(camera.viewport.position.x, cameraYOffset));
   }
 
   late double startZoom;
@@ -52,25 +64,36 @@ class AimGame extends FlameGame
   void onScaleUpdate(ScaleUpdateInfo info) {
     final currentScale = info.scale.global;
     if (homeMap == null) return;
-    if (!currentScale.isIdentity()) {
-      if (startZoom * currentScale.y >= (screenHeight / homeMap!.height)) {
-        camera.viewfinder.zoom = startZoom * currentScale.y;
-        clampZoom();
-      }
-    } else {
+    var zoomDiff =
+        (startZoom * currentScale.y - (screenHeight / homeMap!.height));
+    if (currentScale.isIdentity()) {
       final delta = info.delta.global;
-      // this is my solution to laptop touchpad and it's working
-      if (camera.viewfinder.zoom + (delta.y.sign * zoomPerScrollUnit) >=
-          (screenHeight / homeMap!.height)) {
-        camera.viewfinder.zoom += delta.y.sign * zoomPerScrollUnit;
-        clampZoom();
+      zoomDiff = (camera.viewfinder.zoom +
+          delta.y.sign * zoomPerScrollUnit -
+          (screenHeight / homeMap!.height));
+    }
+    // make the game minimum zoom in
+    if (zoomDiff < 0.65) {
+      if (!currentScale.isIdentity()) {
+        if (startZoom * currentScale.y >= (screenHeight / homeMap!.height)) {
+          camera.viewfinder.zoom = startZoom * currentScale.y;
+          clampZoom();
+        }
+      } else {
+        final delta = info.delta.global;
+        // this is my solution to laptop touchpad and it's working
+        if (camera.viewfinder.zoom + (delta.y.sign * zoomPerScrollUnit) >=
+            (screenHeight / homeMap!.height)) {
+          camera.viewfinder.zoom += delta.y.sign * zoomPerScrollUnit;
+          clampZoom();
+        }
       }
     }
-    var cameraYOffset = (homeMap!.height - screenHeight) *
-        (camera.viewfinder.zoom - (screenHeight / homeMap!.height));
-    print(cameraYOffset);
+    // this is approximate calculation to move the camera to the bottom
+    // TODO exact
+    var cameraYOffset = 32 * zoomDiff / 0.07;
+    // print(camera.viewfinder.zoom - (screenHeight / homeMap!.height));
     camera.moveTo(Vector2(camera.viewport.position.x, cameraYOffset));
-    // TODO pin this to the bottom
   }
 
   @override
@@ -103,7 +126,7 @@ class AimGame extends FlameGame
 
     await world.add(homeMap!);
     final obstacleGroup = homeMap!.tileMap.getLayer<ObjectGroup>('ground');
-    for (var obj in obstacleGroup!.objects) {
+    for (var obj in obstacleGroup?.objects ?? []) {
       await world.add(Ground(
           fraction: 10,
           size: Vector2(obj.width, obj.height),
