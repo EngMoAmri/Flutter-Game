@@ -16,85 +16,34 @@ import 'components/components.dart';
 enum PlayState { loading, playing, gameOver, won } // Add this enumeration
 
 class AimGame extends FlameGame
-    with ScrollDetector, ScaleDetector, HasCollisionDetection {
+    with ScrollDetector, HasCollisionDetection {
   TiledComponent? homeMap;
   List<ext.Image> itemsIcons = [];
   late ext.Image bubble; // the items will be inside bubbles
   List<ItemType> itemsTypes = [];
   Item? testItem;
   Slingshot? slingshot;
-  void clampZoom() {
-    camera.viewfinder.zoom = camera.viewfinder.zoom.clamp(0.05, 3.0);
-  }
-
-  static const zoomPerScrollUnit = 0.02;
 
   @override
   void onScroll(PointerScrollInfo info) {
     if (homeMap == null) return;
-    var zoomDiff = (camera.viewfinder.zoom +
-        info.scrollDelta.global.y.sign * zoomPerScrollUnit -
-        (screenHeight / homeMap!.height));
-    // make the game minimum zoom in
-    if (zoomDiff < 0.65) {
-      if (
-          // make the game maximum zoom out
-          camera.viewfinder.zoom +
-                  (info.scrollDelta.global.y.sign * zoomPerScrollUnit) >=
-              (screenHeight / homeMap!.height)) {
-        camera.viewfinder.zoom +=
-            info.scrollDelta.global.y.sign * zoomPerScrollUnit;
-        clampZoom();
-      }
+    // // make the game minimum zoom in
+    // if (camera.viewfinder.zoom <= 1.5) {
+    //   if (
+    //       // make the game maximum zoom out
+    //       camera.viewfinder.zoom +
+    //               (info.scrollDelta.global.y.sign * zoomPerScrollUnit) >=
+    //           (screenHeight / homeMap!.height)) {
+    //     camera.viewfinder.zoom +=
+    //         info.scrollDelta.global.y.sign * zoomPerScrollUnit;
+    //     clampZoom();
+    //   }
+    // }else{
+    //   camera.viewfinder.zoom = 1.5;
+    // }
+    // camera.moveTo(Vector2(
+    //       camera.viewport.position.x, homeMap!.height - screenHeight / camera.viewfinder.zoom));
     }
-    // this is approximate calculation to move the camera to the bottom
-    var cameraYOffset = 32 * zoomDiff / 0.07;
-    // print(camera.viewfinder.zoom - (screenHeight / homeMap!.height));
-    camera.moveTo(Vector2(camera.viewport.position.x, cameraYOffset));
-  }
-
-  late double startZoom;
-
-  @override
-  void onScaleStart(info) {
-    startZoom = camera.viewfinder.zoom;
-  }
-
-  @override
-  void onScaleUpdate(ScaleUpdateInfo info) {
-    final currentScale = info.scale.global;
-    if (homeMap == null) return;
-    var zoomDiff =
-        (startZoom * currentScale.y - (screenHeight / homeMap!.height));
-    if (currentScale.isIdentity()) {
-      final delta = info.delta.global;
-      zoomDiff = (camera.viewfinder.zoom +
-          delta.y.sign * zoomPerScrollUnit -
-          (screenHeight / homeMap!.height));
-    }
-    // make the game minimum zoom in
-    if (zoomDiff < 0.65) {
-      if (!currentScale.isIdentity()) {
-        if (startZoom * currentScale.y >= (screenHeight / homeMap!.height)) {
-          camera.viewfinder.zoom = startZoom * currentScale.y;
-          clampZoom();
-        }
-      } else {
-        final delta = info.delta.global;
-        // this is my solution to laptop touchpad and it's working
-        if (camera.viewfinder.zoom + (delta.y.sign * zoomPerScrollUnit) >=
-            (screenHeight / homeMap!.height)) {
-          camera.viewfinder.zoom += delta.y.sign * zoomPerScrollUnit;
-          clampZoom();
-        }
-      }
-    }
-    // this is approximate calculation to move the camera to the bottom
-    // TODO exact
-    var cameraYOffset = 32 * zoomDiff / 0.07;
-    // print(camera.viewfinder.zoom - (screenHeight / homeMap!.height));
-    camera.moveTo(Vector2(camera.viewport.position.x, cameraYOffset));
-  }
 
   @override
   FutureOr<void> onLoad() async {
@@ -122,8 +71,7 @@ class AimGame extends FlameGame
       ItemType.bottle,
     ]);
     homeMap = await TiledComponent.load('throwing-map-1.tmx', Vector2.all(32));
-    camera.viewfinder.zoom = (screenHeight / homeMap!.height);
-
+    minZoom = screenHeight / homeMap!.height;
     await world.add(homeMap!);
     final obstacleGroup = homeMap!.tileMap.getLayer<ObjectGroup>('ground');
     for (var obj in obstacleGroup?.objects ?? []) {
@@ -132,18 +80,18 @@ class AimGame extends FlameGame
           size: Vector2(obj.width, obj.height),
           position: Vector2(obj.x, obj.y)));
     }
-    // testItem = Item(Vector2(80, gameHeight - 100),
-    //     image: itemsIcons[0], type: itemsTypes[0]);
-    // testItem!.radius = (itemSize / 2) - 8;
-    // await world.add(testItem!);
-    // slingshot = Slingshot(
-    //   Vector2(200, homeMap!.height - 105),
-    // );
-    // await world.add(slingshot!);
-    // slingshot!.setSelectedItem(testItem!);
-    // if (homeMap!.height > gameHeight) {
-    //   camera.moveTo(
-    //       Vector2(camera.viewport.position.x, homeMap!.height - gameHeight));
+    testItem = Item(Vector2(80, screenHeight - 100),
+        image: itemsIcons[0], type: itemsTypes[0]);
+    testItem!.radius = (itemSize / 2) - 8;
+    await world.add(testItem!);
+    slingshot = Slingshot(
+      Vector2(200, homeMap!.height - 105),
+    );
+    await world.add(slingshot!);
+    slingshot!.setSelectedItem(testItem!);
+    // if (homeMap!.height > screenHeight) {
+    //   camera.moveTo(Vector2(
+    //       camera.viewport.position.x, homeMap!.height - screenHeight / camera.viewfinder.zoom));
     // }
   }
 
@@ -154,14 +102,11 @@ class AimGame extends FlameGame
 
   @override
   void onGameResize(ext.Vector2 size) {
-    // print('${homeMap!.height}, ${gameHeight}');
     screenWidth = size.x;
     screenHeight = size.y;
     if ((homeMap?.height ?? 0.0) > screenHeight) {
-      camera.viewfinder.zoom = (screenHeight / homeMap!.height);
-
-      // camera.moveTo(
-      //     Vector2(camera.viewport.position.x, homeMap!.height - gameHeight));
+      camera.moveTo(Vector2(
+          camera.viewport.position.x, homeMap!.height - screenHeight / camera.viewfinder.zoom));
     }
     camera.viewport =
         FixedResolutionViewport(resolution: Vector2(screenWidth, screenHeight));

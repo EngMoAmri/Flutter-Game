@@ -16,6 +16,7 @@ class AimShootGamePage extends StatefulWidget {
 
 class _AimShootGamePageState extends State<AimShootGamePage> {
   late final AimGame game;
+  double zoom = 1;
   @override
   void initState() {
     super.initState();
@@ -50,8 +51,62 @@ class _AimShootGamePageState extends State<AimShootGamePage> {
             child: SizedBox(
               width: screenWidth,
               height: screenHeight,
-              child: GameWidget(
-                game: game,
+              child: Stack(
+                children: [
+                  GameWidget(
+                    game: game,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: SizedBox(
+                        height: 250,
+                        width: 40,
+                        child: Container(
+                          decoration: const BoxDecoration(
+                              color: Colors.black45,
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(16))),
+                          child: Column(
+                            children: [
+                              const SizedBox(
+                                height: 16,
+                              ),
+                              const Icon(
+                                Icons.zoom_out,
+                                color: Colors.white60,
+                              ),
+                              Expanded(
+                                child: RotatedBox(
+                                  quarterTurns: 1,
+                                  child: Slider(
+                                      value: zoom,
+                                      activeColor: Colors.white60,
+                                      min: minZoom,
+                                      max: maxZoom,
+                                      onChanged: (value) {
+                                        game.camera.viewfinder.zoom = value;
+                                        setState(() {
+                                          zoom = value;
+                                        });
+                                      }),
+                                ),
+                              ),
+                              const Icon(
+                                Icons.zoom_in,
+                                color: Colors.white60,
+                              ),
+                              const SizedBox(
+                                height: 16,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                ],
               ),
             ),
           ),

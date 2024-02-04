@@ -67,15 +67,16 @@ class Item extends CircleComponent
         movementDirection.x > 0) {
       cameraMovement = Vector2(movementDirection.x * dt, 0);
     }
-    if ((position.y + 64 >= game.size.y / 2) &&
-        (position.y + 64 <= game.homeMap!.height - game.size.y / 2)) {
+    if ((position.y + 64 >= game.size.y / (2*game.camera.viewfinder.zoom)) &&
+        (position.y + 64 <= game.homeMap!.height - game.size.y / (2*game.camera.viewfinder.zoom))&&
+        (game.camera.viewfinder.zoom>1)) {
       if (cameraMovement != null) {
         cameraMovement.y = movementDirection.y * dt;
       } else {
         cameraMovement = Vector2(0, movementDirection.y * dt);
       }
     }
-    if (cameraMovement != null) {
+    if (cameraMovement != null && game.slingshot?.selectedItem==null) {
       game.camera.moveBy(cameraMovement);
     }
   }

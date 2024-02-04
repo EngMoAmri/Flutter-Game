@@ -64,7 +64,11 @@ class Slingshot extends CircleComponent
     item.useCollisions = false;
     selectedItem = item;
     selectedItem!.position = dragStartPosition!;
-  }
+     if (game.homeMap!.height > screenHeight) {
+      game.camera.moveTo(Vector2(
+          game.camera.viewport.position.x, game.homeMap!.height - screenHeight / game.camera.viewfinder.zoom));
+    }
+ }
 
   void throwSelectedItem() async {
     selectedItem!.position = dragStartPosition!;
@@ -75,8 +79,6 @@ class Slingshot extends CircleComponent
     // TODO delete below testing
     await Future.delayed(const Duration(seconds: 5));
     game.setSelectedItemForTest();
-    game.camera.moveTo(Vector2(
-        game.camera.viewport.position.x, game.homeMap!.height - screenHeight));
   }
 
   void updateTrajectory(Vector2 dir, double dt) async {
