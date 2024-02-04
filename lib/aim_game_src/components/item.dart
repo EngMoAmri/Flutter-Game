@@ -63,20 +63,21 @@ class Item extends CircleComponent
     Vector2? cameraMovement;
     // Prevent ember from going beyond half screen.
     if ((position.x + 64 >= game.size.x / 2) &&
-        (position.x + 64 <= game.homeMap!.width - game.size.x / 2) &&
-        movementDirection.x > 0) {
+        (position.x + 64 <= game.homeMap!.width - game.size.x / 2)) {
       cameraMovement = Vector2(movementDirection.x * dt, 0);
     }
-    if ((position.y + 64 >= game.size.y / (2*game.camera.viewfinder.zoom)) &&
-        (position.y + 64 <= game.homeMap!.height - game.size.y / (2*game.camera.viewfinder.zoom))&&
-        (game.camera.viewfinder.zoom>1)) {
+    if ((position.y + 64 >= game.size.y / (2 * game.camera.viewfinder.zoom)) &&
+        (position.y + 64 <=
+            game.homeMap!.height -
+                game.size.y / (2 * game.camera.viewfinder.zoom)) &&
+        (game.camera.viewfinder.zoom > 1)) {
       if (cameraMovement != null) {
         cameraMovement.y = movementDirection.y * dt;
       } else {
         cameraMovement = Vector2(0, movementDirection.y * dt);
       }
     }
-    if (cameraMovement != null && game.slingshot?.selectedItem==null) {
+    if (cameraMovement != null && game.slingshot?.selectedItem == null) {
       game.camera.moveBy(cameraMovement);
     }
   }
@@ -91,16 +92,20 @@ class Item extends CircleComponent
       var x2 = intersectionPoints.last.x;
       var y1 = intersectionPoints.first.y;
       var y2 = intersectionPoints.last.y;
-      // TODO deal with this perfectly
-      if (y1 <= position.y || y2 <= position.y) {
-        movementDirection.y = -movementDirection.y;
-      } else if ((x1 - x2).abs() > 2) {
+      if (((x1 - x2).abs() > 2) &&
+          ((y1 - y2).abs() == 0) &&
+          (y1 >= position.y)) {
         isGrounded = true;
-      } else if (x1 <= position.x ||
-          x2 <= position.x ||
-          x1 >= position.x + size.x ||
-          x2 >= position.x + size.x) {
-        movementDirection.x = -movementDirection.x;
+      }
+      if (!isGrounded) {
+        if ((y1 <= position.y || y2 <= position.y) && ((y1 - y2).abs() == 0)) {
+          movementDirection.y = -movementDirection.y;
+        } else if (x1 >= position.x ||
+            x2 >= position.x ||
+            x1 <= position.x + size.x ||
+            x2 <= position.x + size.x) {
+          movementDirection.x = -movementDirection.x;
+        }
       }
     }
   }
