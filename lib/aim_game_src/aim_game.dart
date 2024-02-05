@@ -15,11 +15,13 @@ import 'components/components.dart';
 
 enum PlayState { loading, playing, gameOver, won } // Add this enumeration
 
-class AimGame extends FlameGame
-    with ScrollDetector, HasCollisionDetection {
+class AimGame extends FlameGame with ScrollDetector, HasCollisionDetection {
   TiledComponent? homeMap;
   List<ext.Image> itemsIcons = [];
   late ext.Image bubble; // the items will be inside bubbles
+
+  late ext.Image itemExplosionImage;
+
   List<ItemType> itemsTypes = [];
   Item? testItem;
   Slingshot? slingshot;
@@ -43,7 +45,7 @@ class AimGame extends FlameGame
     // }
     // camera.moveTo(Vector2(
     //       camera.viewport.position.x, homeMap!.height - screenHeight / camera.viewfinder.zoom));
-    }
+  }
 
   @override
   FutureOr<void> onLoad() async {
@@ -70,6 +72,7 @@ class AimGame extends FlameGame
       ItemType.pan,
       ItemType.bottle,
     ]);
+    itemExplosionImage = await imagesLoader.load('smoke.png');
     homeMap = await TiledComponent.load('throwing-map-1.tmx', Vector2.all(32));
     minZoom = screenHeight / homeMap!.height;
     await world.add(homeMap!);
@@ -89,6 +92,8 @@ class AimGame extends FlameGame
     );
     await world.add(slingshot!);
     slingshot!.setSelectedItem(testItem!);
+    await world.add(Recycler(Vector2(400, homeMap!.height - 105)));
+
     // if (homeMap!.height > screenHeight) {
     //   camera.moveTo(Vector2(
     //       camera.viewport.position.x, homeMap!.height - screenHeight / camera.viewfinder.zoom));
@@ -105,8 +110,8 @@ class AimGame extends FlameGame
     screenWidth = size.x;
     screenHeight = size.y;
     if ((homeMap?.height ?? 0.0) > screenHeight) {
-      camera.moveTo(Vector2(
-          camera.viewport.position.x, homeMap!.height - screenHeight / camera.viewfinder.zoom));
+      camera.moveTo(Vector2(camera.viewport.position.x,
+          homeMap!.height - screenHeight / camera.viewfinder.zoom));
     }
     camera.viewport =
         FixedResolutionViewport(resolution: Vector2(screenWidth, screenHeight));

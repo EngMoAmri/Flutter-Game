@@ -203,7 +203,7 @@ class _HomePageState extends State<HomePage> {
                                                   Expanded(
                                                     child: Card(
                                                       elevation: 10,
-                                                      margin: EdgeInsets.only(
+                                                      margin: const EdgeInsets.only(
                                                           top: 4),
                                                       child: Container(
                                                         color: Colors.black,
@@ -214,7 +214,7 @@ class _HomePageState extends State<HomePage> {
                                                   Expanded(
                                                     child: Card(
                                                       elevation: 10,
-                                                      margin: EdgeInsets.only(
+                                                      margin: const EdgeInsets.only(
                                                           top: 4),
                                                       child: Container(
                                                         color: Colors.yellow,
@@ -239,7 +239,7 @@ class _HomePageState extends State<HomePage> {
                                                   Expanded(
                                                     child: Card(
                                                       elevation: 10,
-                                                      margin: EdgeInsets.only(
+                                                      margin: const EdgeInsets.only(
                                                           top: 4),
                                                       child: Container(
                                                         color: Colors.black,
@@ -250,7 +250,7 @@ class _HomePageState extends State<HomePage> {
                                                   Expanded(
                                                     child: Card(
                                                       elevation: 10,
-                                                      margin: EdgeInsets.only(
+                                                      margin: const EdgeInsets.only(
                                                           top: 4),
                                                       child: Container(
                                                         color: Colors.yellow,

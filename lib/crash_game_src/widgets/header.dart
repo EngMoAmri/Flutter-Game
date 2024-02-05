@@ -183,7 +183,7 @@ class _HeaderState extends State<Header> {
                             color: Colors.brown[600],
                             shadows: <Shadow>[
                               Shadow(
-                                offset: Offset(1.0, 1.2),
+                                offset: const Offset(1.0, 1.2),
                                 blurRadius: 1.0,
                                 color: Colors.brown[200]!,
                               ),
@@ -368,7 +368,7 @@ class _HeaderState extends State<Header> {
                                               ],
                                             ),
                                             child: ClipRRect(
-                                              borderRadius: BorderRadius.all(
+                                              borderRadius: const BorderRadius.all(
                                                   Radius.circular(10)),
                                               child: LinearProgressIndicator(
                                                 value: points / goul,
@@ -384,7 +384,7 @@ class _HeaderState extends State<Header> {
                                           Center(
                                             child: Text(
                                               '$points',
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                   color: Colors.white,
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 18),
@@ -403,7 +403,7 @@ class _HeaderState extends State<Header> {
                       Expanded(
                         flex: 2,
                         child: Container(
-                          margin: EdgeInsets.all(16.0),
+                          margin: const EdgeInsets.all(16.0),
                           decoration: const BoxDecoration(
                             borderRadius: BorderRadius.all(Radius.circular(10)),
                             boxShadow: [

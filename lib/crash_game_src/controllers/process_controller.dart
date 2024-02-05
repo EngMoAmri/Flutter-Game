@@ -371,8 +371,9 @@ class ProcessController {
         } else if (item.powerType == PowerType.row) {
           // remove the entire row
           for (int col = 0; col < horizontalItemsCount; col++) {
-            if (!(recycleRush.board[item.row][col]?.isUsable ?? false))
+            if (!(recycleRush.board[item.row][col]?.isUsable ?? false)) {
               continue;
+            }
             if ((recycleRush.board[item.row][col]!.item != null) &&
                 !itemsToRemove
                     .contains(recycleRush.board[item.row][col]!.item)) {

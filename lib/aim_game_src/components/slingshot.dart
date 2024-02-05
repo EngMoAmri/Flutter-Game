@@ -56,6 +56,8 @@ class Slingshot extends CircleComponent
       timeElapsed = 0;
     }
     timeElapsed += dt;
+    // if(isAiming) updateTrajectory(aimDirection, dt);
+    
   }
 
   void setSelectedItem(Item item) {

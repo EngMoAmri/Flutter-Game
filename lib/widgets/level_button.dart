@@ -17,7 +17,7 @@ class _LevelButtonState extends State<LevelButton>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 200),
       lowerBound: 0.0,
       upperBound: 0.1,
     )..addListener(() {
@@ -56,7 +56,7 @@ class _LevelButtonState extends State<LevelButton>
   Widget get _animatedButtonUI => Container(
         width: 80,
         height: 80,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           borderRadius: BorderRadius.all(Radius.circular(100)),
           boxShadow: [
             BoxShadow(
