@@ -69,7 +69,7 @@ class Recycler extends CircleComponent
               ).createAnimation(row: 0, stepTime: 0.5)),
         ),
       );
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future.delayed(const Duration(milliseconds: 250));
       game.world.remove(other);
     }
     super.onCollisionStart(intersectionPoints, other);

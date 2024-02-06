@@ -46,7 +46,7 @@ class Item extends CircleComponent
           game.bubble,
         )));
     add(CircleHitbox(
-      radius: radius - 2,
+      radius: itemSize / 2,
     ));
   }
 
@@ -92,20 +92,22 @@ class Item extends CircleComponent
       var x2 = intersectionPoints.last.x;
       var y1 = intersectionPoints.first.y;
       var y2 = intersectionPoints.last.y;
-      if (((x1 - x2).abs() > 2) &&
-          ((y1 - y2).abs() == 0) &&
-          (y1 >= position.y)) {
-        isGrounded = true;
-      }
-      if (!isGrounded) {
-        if ((y1 <= position.y || y2 <= position.y) && ((y1 - y2).abs() == 0)) {
-          movementDirection.y = -movementDirection.y;
-        } else if (x1 >= position.x ||
-            x2 >= position.x ||
-            x1 <= position.x + size.x ||
-            x2 <= position.x + size.x) {
-          movementDirection.x = -movementDirection.x;
+      if (((x1 - x2).abs() > 2) && (y1 >= position.y)) {
+        if (movementDirection.y.abs() > 35) {
+          // bouncing
+          movementDirection.y = -movementDirection.y / 2;
+        } else {
+          isGrounded = true;
         }
+        return;
+      }
+      if ((y1 <= position.y || y2 <= position.y) && ((y1 - y2).abs() == 0)) {
+        movementDirection.y = -movementDirection.y;
+      } else if (x1 >= position.x ||
+          x2 >= position.x ||
+          x1 <= position.x + size.x ||
+          x2 <= position.x + size.x) {
+        movementDirection.x = -movementDirection.x;
       }
     }
   }

@@ -92,7 +92,7 @@ class AimGame extends FlameGame with ScrollDetector, HasCollisionDetection {
     );
     await world.add(slingshot!);
     slingshot!.setSelectedItem(testItem!);
-    await world.add(Recycler(Vector2(400, homeMap!.height - 105)));
+    await world.add(Recycler(Vector2(800, homeMap!.height - 105)));
 
     // if (homeMap!.height > screenHeight) {
     //   camera.moveTo(Vector2(
