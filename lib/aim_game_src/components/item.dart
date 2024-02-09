@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
@@ -31,6 +32,9 @@ class Item extends CircleComponent
   bool useCollisions = true; // this to prevent gravity when it is on slingshot
   Vector2 movementDirection = Vector2(0, 0);
   bool isGrounded = false;
+
+  final bounceSound = AssetSource('sounds/bounce.mp3');
+
   @override
   Future<void> onLoad() async {
     super.onLoad();
@@ -96,17 +100,20 @@ class Item extends CircleComponent
         if (movementDirection.y.abs() > 35) {
           // bouncing
           movementDirection.y = -movementDirection.y / 2;
+          AudioPlayer().play(bounceSound);
         } else {
           isGrounded = true;
         }
         return;
       }
       if ((y1 <= position.y || y2 <= position.y) && ((y1 - y2).abs() == 0)) {
+        AudioPlayer().play(bounceSound);
         movementDirection.y = -movementDirection.y;
       } else if (x1 >= position.x ||
           x2 >= position.x ||
           x1 <= position.x + size.x ||
           x2 <= position.x + size.x) {
+        AudioPlayer().play(bounceSound);
         movementDirection.x = -movementDirection.x;
       }
     }

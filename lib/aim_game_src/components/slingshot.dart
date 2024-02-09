@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/cache.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
@@ -30,6 +31,8 @@ class Slingshot extends CircleComponent
   Vector2? dragStartPosition;
   Vector2? dragEndPosition;
   bool isAiming = false;
+  final slingShotSound = AssetSource('sounds/slingshot.mp3');
+
   @override
   Future<void> onLoad() async {
     super.onLoad();
@@ -101,7 +104,7 @@ class Slingshot extends CircleComponent
       isAiming = false;
       return;
     }
-    // selectedItem!.position = dragStartPosition!;
+    AudioPlayer().play(slingShotSound);
     isAiming = true;
   }
 

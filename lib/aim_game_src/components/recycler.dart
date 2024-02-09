@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/cache.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
@@ -18,6 +19,9 @@ class Recycler extends CircleComponent
           paint: material.Paint()..color = material.Colors.transparent,
           anchor: Anchor.center,
         );
+
+  final successSound = AssetSource('sounds/better.mp3');
+
   @override
   Future<void> onLoad() async {
     super.onLoad();
@@ -57,6 +61,7 @@ class Recycler extends CircleComponent
   void onCollisionStart(
       Set<Vector2> intersectionPoints, PositionComponent other) async {
     if (other is Item) {
+      AudioPlayer().play(successSound);
       await add(
         ParticleSystemComponent(
           priority: other.priority + 1, // to be displayed above the item
