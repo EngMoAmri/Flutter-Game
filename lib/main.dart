@@ -1,14 +1,16 @@
 import 'package:flame/flame.dart';
 import 'package:flutter/material.dart';
-import 'pages/aim_shoot_game_page.dart';
+import 'package:get/get.dart';
+import 'pages/home_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   Flame.device.fullScreen();
   Flame.device.setLandscape();
-  runApp(const AimShootGamePage());
-  // const GetMaterialApp(
-  //     debugShowCheckedModeBanner: false, home: HomePage()));
+  runApp(
+      // const AimShootGamePage());
+      const GetMaterialApp(
+          debugShowCheckedModeBanner: false, home: HomePage()));
 }
 
 /// TODO list

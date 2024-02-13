@@ -84,7 +84,7 @@ class _CrashGamePageState extends State<CrashGamePage> {
                 image: DecorationImage(
                     fit: BoxFit.cover,
                     image: AssetImage(
-                      'assets/images/backgrounds/background-1.jpg',
+                      'assets/images/backgrounds/background.png',
                     ))),
             margin: EdgeInsets.zero,
             child: Row(

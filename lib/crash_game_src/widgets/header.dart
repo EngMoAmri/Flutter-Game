@@ -35,29 +35,29 @@ class _HeaderState extends State<Header> {
     itemsImagesMap.addAll({
       'can': {
         'none': Image.asset(
-          'assets/images/can.png',
+          'assets/images/items/can.png',
           width: 36,
         ),
         'col': Image.asset(
-          'assets/images/can-col.png',
+          'assets/images/items/can-col.png',
           width: 36,
         ),
         'row': Image.asset(
-          'assets/images/can-row.png',
+          'assets/images/items/can-row.png',
           width: 36,
         ),
         'square': Image.asset(
-          'assets/images/can-square.png',
+          'assets/images/items/can-square.png',
           width: 36,
         ),
       },
       'carton': {
         'none': Image.asset(
-          'assets/images/carton.png',
+          'assets/images/items/carton.png',
           width: 36,
         ),
         'col': Image.asset(
-          'assets/images/carton-col.png',
+          'assets/images/items/carton-col.png',
           width: 36,
         ),
         'row': Image.asset(
@@ -65,67 +65,67 @@ class _HeaderState extends State<Header> {
           width: 36,
         ),
         'square': Image.asset(
-          'assets/images/carton-square.png',
+          'assets/images/items/carton-square.png',
           width: 36,
         ),
       },
       'glass': {
         'none': Image.asset(
-          'assets/images/glass.png',
+          'assets/images/items/glass.png',
           width: 36,
         ),
         'col': Image.asset(
-          'assets/images/glass-col.png',
+          'assets/images/items/glass-col.png',
           width: 36,
         ),
         'row': Image.asset(
-          'assets/images/glass-row.png',
+          'assets/images/items/glass-row.png',
           width: 36,
         ),
         'square': Image.asset(
-          'assets/images/glass-square.png',
+          'assets/images/items/glass-square.png',
           width: 36,
         ),
       },
       'pan': {
         'none': Image.asset(
-          'assets/images/pan.png',
+          'assets/images/items/pan.png',
           width: 36,
         ),
         'col': Image.asset(
-          'assets/images/pan-col.png',
+          'assets/images/items/pan-col.png',
           width: 36,
         ),
         'row': Image.asset(
-          'assets/images/pan-row.png',
+          'assets/images/items/pan-row.png',
           width: 36,
         ),
         'square': Image.asset(
-          'assets/images/pan-square.png',
+          'assets/images/items/pan-square.png',
           width: 36,
         ),
       },
       'bottle': {
         'none': Image.asset(
-          'assets/images/bottle.png',
+          'assets/images/items/bottle.png',
           width: 36,
         ),
         'col': Image.asset(
-          'assets/images/bottle-col.png',
+          'assets/images/items/bottle-col.png',
           width: 36,
         ),
         'row': Image.asset(
-          'assets/images/bottle-row.png',
+          'assets/images/items/bottle-row.png',
           width: 36,
         ),
         'square': Image.asset(
-          'assets/images/bottle-square.png',
+          'assets/images/items/bottle-square.png',
           width: 36,
         ),
       },
       'superType': {
         'superType': Image.asset(
-          'assets/images/grenade.png',
+          'assets/images/items/grenade.png',
           width: 36,
         ),
       },
@@ -145,9 +145,9 @@ class _HeaderState extends State<Header> {
               const SizedBox(
                 width: 24,
               ),
-              Image.asset('assets/images/rope.png'),
+              Image.asset('assets/images/items/rope.png'),
               Expanded(child: Container()),
-              Image.asset('assets/images/rope.png'),
+              Image.asset('assets/images/items/rope.png'),
               const SizedBox(
                 width: 24,
               ),
@@ -215,7 +215,8 @@ class _HeaderState extends State<Header> {
                       Expanded(
                           child: ClipRRect(
                         borderRadius: BorderRadius.circular(16.0),
-                        child: Image.asset('assets/images/wood-2.jpg',
+                        child: Image.asset(
+                            'assets/images/backgrounds/wood-2.jpg',
                             fit: BoxFit.cover),
                       )),
                     ],
@@ -368,8 +369,9 @@ class _HeaderState extends State<Header> {
                                               ],
                                             ),
                                             child: ClipRRect(
-                                              borderRadius: const BorderRadius.all(
-                                                  Radius.circular(10)),
+                                              borderRadius:
+                                                  const BorderRadius.all(
+                                                      Radius.circular(10)),
                                               child: LinearProgressIndicator(
                                                 value: points / goul,
                                                 valueColor:

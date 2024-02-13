@@ -3,8 +3,10 @@ import 'dart:ui';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_game/pages/crash_game_page.dart';
+import 'package:flutter_game/utlis/fancy_button.dart';
 import 'package:flutter_game/utlis/path_line.dart';
-import 'package:flutter_game/widgets/level_button.dart';
+import 'package:get/get.dart';
 import 'dart:math' as math;
 import 'package:linked_scroll_controller/linked_scroll_controller.dart';
 
@@ -27,6 +29,13 @@ class _HomePageState extends State<HomePage> {
   var horizontalScrollController =
       ScrollController(); // this is to make the whel scroll view width exceed the screen width
   List<Widget> levels = [];
+  List<Color> levelsColors = [
+    Colors.yellow,
+    Colors.green,
+    Colors.blue,
+    Colors.white,
+    Colors.brown,
+  ];
   List<String> trees = [
     'assets/images/trees/tree-1.png',
     'assets/images/trees/tree-2.png',
@@ -100,7 +109,8 @@ class _HomePageState extends State<HomePage> {
           body: Container(
             decoration: const BoxDecoration(
                 image: DecorationImage(
-                    image: AssetImage('assets/images/backgrounds/BG.png'),
+                    image:
+                        AssetImage('assets/images/backgrounds/background.png'),
                     fit: BoxFit.cover)),
             child: Column(
               children: [
@@ -203,8 +213,9 @@ class _HomePageState extends State<HomePage> {
                                                   Expanded(
                                                     child: Card(
                                                       elevation: 10,
-                                                      margin: const EdgeInsets.only(
-                                                          top: 4),
+                                                      margin:
+                                                          const EdgeInsets.only(
+                                                              top: 4),
                                                       child: Container(
                                                         color: Colors.black,
                                                         width: 10,
@@ -214,8 +225,9 @@ class _HomePageState extends State<HomePage> {
                                                   Expanded(
                                                     child: Card(
                                                       elevation: 10,
-                                                      margin: const EdgeInsets.only(
-                                                          top: 4),
+                                                      margin:
+                                                          const EdgeInsets.only(
+                                                              top: 4),
                                                       child: Container(
                                                         color: Colors.yellow,
                                                         width: 10,
@@ -239,8 +251,9 @@ class _HomePageState extends State<HomePage> {
                                                   Expanded(
                                                     child: Card(
                                                       elevation: 10,
-                                                      margin: const EdgeInsets.only(
-                                                          top: 4),
+                                                      margin:
+                                                          const EdgeInsets.only(
+                                                              top: 4),
                                                       child: Container(
                                                         color: Colors.black,
                                                         width: 10,
@@ -250,8 +263,9 @@ class _HomePageState extends State<HomePage> {
                                                   Expanded(
                                                     child: Card(
                                                       elevation: 10,
-                                                      margin: const EdgeInsets.only(
-                                                          top: 4),
+                                                      margin:
+                                                          const EdgeInsets.only(
+                                                              top: 4),
                                                       child: Container(
                                                         color: Colors.yellow,
                                                         width: 10,
@@ -351,12 +365,20 @@ class _HomePageState extends State<HomePage> {
                                                                           5)),
                                                           child: RotatedBox(
                                                             quarterTurns: 2,
-                                                            child: Image.asset(
-                                                              trashes[rand
-                                                                  .nextInt(4)],
-                                                              width:
-                                                                  size.width *
-                                                                      0.3,
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .only(
+                                                                      top: 110),
+                                                              child:
+                                                                  Image.asset(
+                                                                trashes[rand
+                                                                    .nextInt(
+                                                                        4)],
+                                                                width:
+                                                                    size.width *
+                                                                        0.3,
+                                                              ),
                                                             ),
                                                           ),
                                                         ),
@@ -421,16 +443,29 @@ class _HomePageState extends State<HomePage> {
                                                   Expanded(
                                                     child: Center(
                                                       child: Padding(
-                                                        padding: (index % 2 !=
-                                                                0)
-                                                            ? const EdgeInsets
-                                                                .only(left: 100)
-                                                            : const EdgeInsets
-                                                                .only(
-                                                                right: 100),
-                                                        child: LevelButton(
-                                                            index: index),
-                                                      ),
+                                                          padding: (index % 2 !=
+                                                                  0)
+                                                              ? const EdgeInsets
+                                                                  .only(
+                                                                  left: 100)
+                                                              : const EdgeInsets
+                                                                  .only(
+                                                                  right: 100),
+                                                          child: FancyButton(
+                                                              size: 80,
+                                                              color: levelsColors[
+                                                                  index %
+                                                                      levelsColors
+                                                                          .length],
+                                                              onPressed: () {
+                                                                Get.to(() =>
+                                                                    const CrashGamePage());
+                                                              },
+                                                              child: Text(
+                                                                  '${100 - index}'))
+                                                          // LevelButton(
+                                                          //     index: index),
+                                                          ),
                                                     ),
                                                   ),
                                                   SizedBox(
