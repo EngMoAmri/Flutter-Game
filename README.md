@@ -18,11 +18,6 @@ In this game we tried to make a game that related to educate players about envir
 
 ## Items Images
 
-| Bottle  | Glass |
-| ------------- | ------------- |
-| <img src="assets/images/items/bottle.png" alt="bottle" width="100"/>  | <img src="assets/images/items/glass.png" alt="glass" width="100"/>  |
-
-
 | Bottle  | Can | Cartoon | Glass | Pan |
 | --- | --- | --- | --- | --- |
 | <img src="assets/images/items/bottle.png" alt="bottle" width="100"/>  | <img src="assets/images/items/can.png" alt="can" width="100"/>  | <img src="assets/images/items/carton.png" alt="cartoon" width="100"/>  | <img src="assets/images/items/glass.png" alt="glass" width="100"/>  | <img src="assets/images/items/pan.png" alt="pan" width="100"/>  |
