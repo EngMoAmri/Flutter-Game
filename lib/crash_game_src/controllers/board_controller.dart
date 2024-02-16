@@ -13,38 +13,22 @@ class BoardController {
   void startGame() async {
     if (recycleRush.playState == PlayState.playing) return;
     recycleRush.points.value = 0;
-    recycleRush.moves.value = 100; // TODO foreach level
+    recycleRush.moves.value = recycleRush.levelCatelog.moves;
     List<Node> nodes = [];
     List<Item> items = [];
-    for (var row = 0; row < verticalItemsCount; row++) {
-      for (var col = 0; col < horizontalItemsCount; col++) {
-        // if (!(board[row][col]!.isUsable)) continue;
+    for (var row = 0;
+        row < recycleRush.levelCatelog.verticalItemsCount;
+        row++) {
+      for (var col = 0;
+          col < recycleRush.levelCatelog.horizontalItemsCount;
+          col++) {
         Vector2 position = Vector2(
-          (col + 0.5) * itemSize +
-              col * itemGutter +
-              itemSize * ((maxItemInRowAndCol - horizontalItemsCount) / 2),
-          (row + 0.5) * itemSize +
-              row * itemGutter +
-              itemSize * ((maxItemInRowAndCol - verticalItemsCount) / 2),
+          (col + 0.5) * itemSize + col * itemGutter,
+          (row + 0.5) * itemSize + row * itemGutter,
         );
+
         int randomItemIndex =
             recycleRush.rand.nextInt(recycleRush.itemsTypes.length - 1);
-        // THis just for testing
-        // // TODO remove
-        // if (row == 0 && col == 3 ||
-        //     row == 1 && col == 3 ||
-        //     row == 2 && col == 2 ||
-        //     row == 2 && col == 4 ||
-        //     row == 2 && col == 5) {
-        //   randomItemIndex = 0;
-        // }
-        // if (row == 0 && col == 2 ||
-        //     row == 1 && col == 2 ||
-        //     row == 2 && col == 3 ||
-        //     row == 2 && col == 1 ||
-        //     row == 2 && col == 0) {
-        //   randomItemIndex = 1;
-        // }
 
         var item = Item(
           itemPosition: position,
@@ -84,9 +68,13 @@ class BoardController {
         recycleRush.playState == PlayState.won) {
       return false;
     }
-    for (var row = 0; row < verticalItemsCount; row++) {
-      for (var col = 0; col < horizontalItemsCount; col++) {
-        if (recycleRush.board[row][col]!.isUsable) {
+    for (var row = 0;
+        row < recycleRush.levelCatelog.verticalItemsCount;
+        row++) {
+      for (var col = 0;
+          col < recycleRush.levelCatelog.horizontalItemsCount;
+          col++) {
+        if (recycleRush.board[row][col]?.isUsable ?? false) {
           Item item = recycleRush.board[row][col]!.item!;
           try {
             // checking with below item
@@ -188,9 +176,13 @@ class BoardController {
         matchResults.add(complexMatchResult);
       }
     }
-    for (var row = 0; row < verticalItemsCount; row++) {
-      for (var col = 0; col < horizontalItemsCount; col++) {
-        if (recycleRush.board[row][col]!.isUsable) {
+    for (var row = 0;
+        row < recycleRush.levelCatelog.verticalItemsCount;
+        row++) {
+      for (var col = 0;
+          col < recycleRush.levelCatelog.horizontalItemsCount;
+          col++) {
+        if (recycleRush.board[row][col]?.isUsable ?? false) {
           Item item = recycleRush.board[row][col]!.item!;
 
           // ensure its met matched
@@ -217,18 +209,26 @@ class BoardController {
   Future<void> shuffleItems() async {
     // put all items in one list to shuffle the list
     List<Item> items = [];
-    for (var row = 0; row < verticalItemsCount; row++) {
-      for (var col = 0; col < horizontalItemsCount; col++) {
-        if (recycleRush.board[row][col]!.isUsable) {
+    for (var row = 0;
+        row < recycleRush.levelCatelog.verticalItemsCount;
+        row++) {
+      for (var col = 0;
+          col < recycleRush.levelCatelog.horizontalItemsCount;
+          col++) {
+        if (recycleRush.board[row][col]?.isUsable ?? false) {
           items.add(recycleRush.board[row][col]!.item!);
         }
       }
     }
     items.shuffle();
     int itemIndex = 0;
-    for (var row = 0; row < verticalItemsCount; row++) {
-      for (var col = 0; col < horizontalItemsCount; col++) {
-        if (recycleRush.board[row][col]!.isUsable) {
+    for (var row = 0;
+        row < recycleRush.levelCatelog.verticalItemsCount;
+        row++) {
+      for (var col = 0;
+          col < recycleRush.levelCatelog.horizontalItemsCount;
+          col++) {
+        if (recycleRush.board[row][col]?.isUsable ?? false) {
           items[itemIndex].row = row;
           items[itemIndex].col = col;
           recycleRush.board[row][col]!.item = items[itemIndex++];
@@ -242,9 +242,13 @@ class BoardController {
     // move to target
     itemIndex = 0;
 
-    for (var row = 0; row < verticalItemsCount; row++) {
-      for (var col = 0; col < horizontalItemsCount; col++) {
-        if (recycleRush.board[row][col]!.isUsable) {
+    for (var row = 0;
+        row < recycleRush.levelCatelog.verticalItemsCount;
+        row++) {
+      for (var col = 0;
+          col < recycleRush.levelCatelog.horizontalItemsCount;
+          col++) {
+        if (recycleRush.board[row][col]?.isUsable ?? false) {
           (items[itemIndex++])
               .moveToTarget(recycleRush.board[row][col]!.position, 0.4);
         }
@@ -377,10 +381,10 @@ class BoardController {
 
     // check we within thhe boudries
     while (col >= 0 &&
-        col < horizontalItemsCount &&
+        col < recycleRush.levelCatelog.horizontalItemsCount &&
         row >= 0 &&
-        row < verticalItemsCount) {
-      if (recycleRush.board[row][col]!.isUsable) {
+        row < recycleRush.levelCatelog.verticalItemsCount) {
+      if (recycleRush.board[row][col]?.isUsable ?? false) {
         Item neighborItem = recycleRush.board[row][col]!.item!;
         // does the type is match and not matched before
         if (!neighborItem.isMatch && neighborItem.type == itemType) {

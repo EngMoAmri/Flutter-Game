@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_game/pages/crash_game_page.dart';
 import 'package:flutter_game/utlis/fancy_button.dart';
+import 'package:flutter_game/utlis/levels.dart';
 import 'package:flutter_game/utlis/path_line.dart';
 import 'package:get/get.dart';
 import 'dart:math' as math;
@@ -28,7 +29,6 @@ class _HomePageState extends State<HomePage> {
   late ScrollController scrollController3D2 = controllers.addAndGet();
   var horizontalScrollController =
       ScrollController(); // this is to make the whel scroll view width exceed the screen width
-  List<Widget> levels = [];
   List<Color> levelsColors = [
     Colors.yellow,
     Colors.green,
@@ -458,8 +458,22 @@ class _HomePageState extends State<HomePage> {
                                                                       levelsColors
                                                                           .length],
                                                               onPressed: () {
-                                                                Get.to(() =>
-                                                                    const CrashGamePage());
+                                                                var level =
+                                                                    100 - index;
+                                                                if (level <=
+                                                                    levels
+                                                                        .length) {
+                                                                  // TODO aiminng game
+                                                                  Get.to(() =>
+                                                                      CrashGamePage(
+                                                                        level:
+                                                                            level,
+                                                                      ));
+                                                                } else {
+                                                                  Get.snackbar(
+                                                                      "Attention",
+                                                                      'Level not ready');
+                                                                }
                                                               },
                                                               child: Text(
                                                                   '${100 - index}'))

@@ -153,7 +153,7 @@ class Item extends SpriteComponent with DragCallbacks, HasGameRef<RecycleRush> {
 
   void _moveDown() {
     // get item below
-    if (row < verticalItemsCount - 1) {
+    if (row < game.levelCatelog.verticalItemsCount - 1) {
       // there is item bellow
       if (game.board[row + 1][col]!.isUsable) {
         targetItem = game.board[row + 1][col]!.item;
@@ -173,7 +173,7 @@ class Item extends SpriteComponent with DragCallbacks, HasGameRef<RecycleRush> {
 
   void _moveRight() {
     // get item
-    if (col < horizontalItemsCount - 1) {
+    if (col < game.levelCatelog.horizontalItemsCount - 1) {
       // there is item
       if (game.board[row][col + 1]!.isUsable) {
         targetItem = game.board[row][col + 1]!.item;

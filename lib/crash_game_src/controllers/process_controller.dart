@@ -3,7 +3,6 @@ import 'package:flame/components.dart';
 import 'package:flame/particles.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter_game/crash_game_src/components/components.dart';
-import 'package:flutter_game/crash_game_src/config.dart';
 import 'package:flutter_game/crash_game_src/match_result.dart';
 import 'package:flutter_game/crash_game_src/recycle_rush.dart';
 
@@ -37,8 +36,12 @@ class ProcessController {
   /// swap item logic
   void swapItem(Item currentItem, Item targetItem) async {
     // to ensure all items are in there places
-    for (var row = 0; row < verticalItemsCount; row++) {
-      for (var col = 0; col < horizontalItemsCount; col++) {
+    for (var row = 0;
+        row < recycleRush.levelCatelog.verticalItemsCount;
+        row++) {
+      for (var col = 0;
+          col < recycleRush.levelCatelog.horizontalItemsCount;
+          col++) {
         if (recycleRush.board[row][col]!.isUsable) {
           if (recycleRush.board[row][col]!.item!.isMoving) {
             return;
@@ -153,8 +156,12 @@ class ProcessController {
     // the swapped item is null coz we dont want to add process to add new power to the item
     MatchResult matchResult =
         MatchResult([selectedItem, targetItem], null, MatchDirection.None);
-    for (int row = 0; row < verticalItemsCount; row++) {
-      for (int col = 0; col < horizontalItemsCount; col++) {
+    for (int row = 0;
+        row < recycleRush.levelCatelog.verticalItemsCount;
+        row++) {
+      for (int col = 0;
+          col < recycleRush.levelCatelog.horizontalItemsCount;
+          col++) {
         if (!recycleRush.board[row][col]!.isUsable) continue;
         if (recycleRush.board[row][col]!.item == null) continue;
         if (recycleRush.board[row][col]!.item!.type == normalItem.type) {
@@ -174,13 +181,17 @@ class ProcessController {
     // the swapped item is null coz we dont want to add process to add new power to the item
     MatchResult matchResult =
         MatchResult([selectedItem, targetItem], null, MatchDirection.None);
-    for (int row = 0; row < verticalItemsCount; row++) {
+    for (int row = 0;
+        row < recycleRush.levelCatelog.verticalItemsCount;
+        row++) {
       if (!recycleRush.board[row][selectedItem.col]!.isUsable) continue;
       if (recycleRush.board[row][selectedItem.col]!.item == null) continue;
       matchResult.connectedItems
           .add(recycleRush.board[row][selectedItem.col]!.item!);
     }
-    for (int col = 0; col < horizontalItemsCount; col++) {
+    for (int col = 0;
+        col < recycleRush.levelCatelog.horizontalItemsCount;
+        col++) {
       if (!recycleRush.board[selectedItem.row][col]!.isUsable) continue;
       if (recycleRush.board[selectedItem.row][col]!.item == null) continue;
       matchResult.connectedItems
@@ -223,14 +234,18 @@ class ProcessController {
     // the swapped item is null coz we dont want to add process to add new power to the item
     MatchResult matchResult =
         MatchResult([selectedItem, targetItem], null, MatchDirection.None);
-    for (int row = 0; row < verticalItemsCount; row++) {
+    for (int row = 0;
+        row < recycleRush.levelCatelog.verticalItemsCount;
+        row++) {
       if (!recycleRush.board[row][selectedItem.col]!.isUsable) continue;
       if (recycleRush.board[row][selectedItem.col]!.item == null) continue;
       matchResult.connectedItems
           .add(recycleRush.board[row][selectedItem.col]!.item!);
     }
-    if (selectedItem.col + 1 < horizontalItemsCount) {
-      for (int row = 0; row < verticalItemsCount; row++) {
+    if (selectedItem.col + 1 < recycleRush.levelCatelog.horizontalItemsCount) {
+      for (int row = 0;
+          row < recycleRush.levelCatelog.verticalItemsCount;
+          row++) {
         if (!recycleRush.board[row][selectedItem.col + 1]!.isUsable) continue;
         if (recycleRush.board[row][selectedItem.col + 1]!.item == null) {
           continue;
@@ -240,7 +255,9 @@ class ProcessController {
       }
     }
     if (selectedItem.col - 1 >= 0) {
-      for (int row = 0; row < verticalItemsCount; row++) {
+      for (int row = 0;
+          row < recycleRush.levelCatelog.verticalItemsCount;
+          row++) {
         if (!recycleRush.board[row][selectedItem.col - 1]!.isUsable) continue;
         if (recycleRush.board[row][selectedItem.col - 1]!.item == null) {
           continue;
@@ -249,14 +266,18 @@ class ProcessController {
             .add(recycleRush.board[row][selectedItem.col - 1]!.item!);
       }
     }
-    for (int col = 0; col < horizontalItemsCount; col++) {
+    for (int col = 0;
+        col < recycleRush.levelCatelog.horizontalItemsCount;
+        col++) {
       if (!recycleRush.board[selectedItem.row][col]!.isUsable) continue;
       if (recycleRush.board[selectedItem.row][col]!.item == null) continue;
       matchResult.connectedItems
           .add(recycleRush.board[selectedItem.row][col]!.item!);
     }
-    if (selectedItem.row + 1 < verticalItemsCount) {
-      for (int col = 0; col < horizontalItemsCount; col++) {
+    if (selectedItem.row + 1 < recycleRush.levelCatelog.verticalItemsCount) {
+      for (int col = 0;
+          col < recycleRush.levelCatelog.horizontalItemsCount;
+          col++) {
         if (!recycleRush.board[selectedItem.row + 1][col]!.isUsable) continue;
         if (recycleRush.board[selectedItem.row + 1][col]!.item == null) {
           continue;
@@ -266,7 +287,9 @@ class ProcessController {
       }
     }
     if (selectedItem.row - 1 >= 0) {
-      for (int col = 0; col < horizontalItemsCount; col++) {
+      for (int col = 0;
+          col < recycleRush.levelCatelog.horizontalItemsCount;
+          col++) {
         if (!recycleRush.board[selectedItem.row - 1][col]!.isUsable) continue;
         if (recycleRush.board[selectedItem.row - 1][col]!.item == null) {
           continue;
@@ -351,7 +374,9 @@ class ProcessController {
       for (var item in previousItemsToRemove) {
         if (item.powerType == PowerType.col) {
           // remove the entire column
-          for (int row = 0; row < verticalItemsCount; row++) {
+          for (int row = 0;
+              row < recycleRush.levelCatelog.verticalItemsCount;
+              row++) {
             if (!(recycleRush.board[row][item.col]?.isUsable ?? false)) {
               continue;
             }
@@ -370,7 +395,9 @@ class ProcessController {
           addColDestroyParticle(item, explosionsParticles);
         } else if (item.powerType == PowerType.row) {
           // remove the entire row
-          for (int col = 0; col < horizontalItemsCount; col++) {
+          for (int col = 0;
+              col < recycleRush.levelCatelog.horizontalItemsCount;
+              col++) {
             if (!(recycleRush.board[item.row][col]?.isUsable ?? false)) {
               continue;
             }
@@ -422,8 +449,12 @@ class ProcessController {
       }
     }
     // this is my idea to start from bottom
-    for (var row = verticalItemsCount - 1; row >= 0; row--) {
-      for (var col = horizontalItemsCount - 1; col >= 0; col--) {
+    for (var row = recycleRush.levelCatelog.verticalItemsCount - 1;
+        row >= 0;
+        row--) {
+      for (var col = recycleRush.levelCatelog.horizontalItemsCount - 1;
+          col >= 0;
+          col--) {
         if (recycleRush.board[row][col]!.item == null) {
           await refillItem(row, col);
         }
@@ -448,8 +479,12 @@ class ProcessController {
   /// set super match to remove its items
   void addSuperMatchedItemsToRemove(Item item, List<Item> itemsToRemove,
       List<ParticleSystemComponent> explosionsParticles) {
-    for (var row = 0; row < verticalItemsCount; row++) {
-      for (var col = 0; col < horizontalItemsCount; col++) {
+    for (var row = 0;
+        row < recycleRush.levelCatelog.verticalItemsCount;
+        row++) {
+      for (var col = 0;
+          col < recycleRush.levelCatelog.horizontalItemsCount;
+          col++) {
         try {
           if ((recycleRush.board[row][col]?.isUsable ?? false)) {
             if (!itemsToRemove.contains(recycleRush.board[row][col]?.item) &&
@@ -636,7 +671,9 @@ class ProcessController {
   /// find the index of lowest null to move items to
   int findLowestNullRow(int col) {
     int lowestRowNull = 99;
-    for (var row = verticalItemsCount - 1; row >= 0; row--) {
+    for (var row = recycleRush.levelCatelog.verticalItemsCount - 1;
+        row >= 0;
+        row--) {
       if (recycleRush.board[row][col]!.item == null) {
         lowestRowNull = row;
         break;

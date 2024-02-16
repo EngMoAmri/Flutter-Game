@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_game/crash_game_src/config.dart';
-// import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_game/utlis/levels.dart';
 
 import '../crash_game_src/recycle_rush.dart';
 import '../crash_game_src/widgets/helps_widget.dart';
@@ -15,8 +15,8 @@ import '../crash_game_src/widgets/header.dart'; // And this one too
 
 class CrashGamePage extends StatefulWidget {
   // Modify this line
-  const CrashGamePage({super.key});
-
+  const CrashGamePage({super.key, required this.level});
+  final int level;
   @override // Add from here...
   State<CrashGamePage> createState() => _CrashGamePageState();
 }
@@ -31,8 +31,7 @@ class _CrashGamePageState extends State<CrashGamePage> {
       AssetSource('sounds/background_music.mp3'),
     );
     player.setReleaseMode(ReleaseMode.loop);
-
-    game = RecycleRush();
+    game = RecycleRush(levelCatelog: levels[widget.level - 1]);
   }
 
   @override
@@ -62,10 +61,12 @@ class _CrashGamePageState extends State<CrashGamePage> {
       gameWidth = gameHeight;
     }
     itemGutter = gameWidth * itemGutterRatio;
-    itemSize = (horizontalItemsCount > verticalItemsCount)
-        ? (gameWidth - (itemGutter * verticalItemsCount)) / horizontalItemsCount
-        : (gameWidth - (itemGutter * horizontalItemsCount)) /
-            verticalItemsCount;
+    itemSize = (game.levelCatelog.horizontalItemsCount >
+            game.levelCatelog.verticalItemsCount)
+        ? (gameWidth - (itemGutter * game.levelCatelog.verticalItemsCount)) /
+            game.levelCatelog.horizontalItemsCount
+        : (gameWidth - (itemGutter * game.levelCatelog.horizontalItemsCount)) /
+            game.levelCatelog.verticalItemsCount;
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,

@@ -8,6 +8,7 @@ import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_game/crash_game_src/controllers/process_controller.dart';
+import 'package:flutter_game/utlis/crash_level_catelog.dart';
 
 import 'components/components.dart';
 import 'config.dart';
@@ -16,12 +17,31 @@ import 'controllers/board_controller.dart';
 enum PlayState { loading, playing, gameOver, won } // Add this enumeration
 
 class RecycleRush extends FlameGame {
+  final CrashLevelCatelog levelCatelog;
+
+  late ValueNotifier<int> goulPoints; // amount of points to win
+  late ValueNotifier<int> moves; // amount of moves
+  final ValueNotifier<int> points = ValueNotifier(0); // amount of points earned
+  late ValueNotifier<Map<GoulItem, int>> externalGouls;
+  RecycleRush({required this.levelCatelog}) {
+    goulPoints =
+        ValueNotifier(levelCatelog.goulPoints); // amount of points to win
+    moves = ValueNotifier(levelCatelog.moves); // amount of moves
+    externalGouls = ValueNotifier(levelCatelog.externalGouls);
+    itemSize =
+        (levelCatelog.horizontalItemsCount > levelCatelog.verticalItemsCount)
+            ? (gameWidth - (itemGutter * levelCatelog.verticalItemsCount)) /
+                levelCatelog.horizontalItemsCount
+            : (gameWidth - (itemGutter * levelCatelog.horizontalItemsCount)) /
+                levelCatelog.verticalItemsCount;
+  }
+
   /// the [key] is for the type name
   /// the [list] is for all related icons
   Map<String, Map<String, ext.Image>> itemsIcons = {};
   List<ItemType> itemsTypes = [];
   List<List<Node?>> board = [];
-  // List<Item> itemsToRemove = [];
+
   Item? selectedItem;
   bool isProcessingMove = false;
   late BoardController boardController;
@@ -34,17 +54,6 @@ class RecycleRush extends FlameGame {
     return Colors.transparent;
   }
 
-  // TODO foreach level
-  final ValueNotifier<int> goulPoints =
-      ValueNotifier(100); // amount of points to win
-  final ValueNotifier<int> moves = ValueNotifier(100); // amount of moves
-  final ValueNotifier<int> points = ValueNotifier(0); // amount of points earned
-  final ValueNotifier<Map<GoulItem, int>> externalGouls = ValueNotifier({
-    GoulItem(type: ItemType.bottle, powerType: PowerType.none): 5,
-    GoulItem(type: ItemType.pan, powerType: PowerType.none): 25,
-    GoulItem(type: ItemType.superType, powerType: PowerType.superType): 2,
-  }); // external items earned max 3
-  // TODO notified
   final rand = math.Random();
 
   late PlayState _playState; // Add from here...
@@ -78,23 +87,21 @@ class RecycleRush extends FlameGame {
       gameHeight = size.x;
     }
     itemGutter = gameWidth * itemGutterRatio;
-    itemSize = (horizontalItemsCount > verticalItemsCount)
-        ? (gameWidth - (itemGutter * verticalItemsCount)) / horizontalItemsCount
-        : (gameWidth - (itemGutter * horizontalItemsCount)) /
-            verticalItemsCount;
+    itemSize =
+        (levelCatelog.horizontalItemsCount > levelCatelog.verticalItemsCount)
+            ? (gameWidth - (itemGutter * levelCatelog.verticalItemsCount)) /
+                levelCatelog.horizontalItemsCount
+            : (gameWidth - (itemGutter * levelCatelog.horizontalItemsCount)) /
+                levelCatelog.verticalItemsCount;
 
     for (var node in world.children.query<Node>()) {
       node.size = Vector2(itemSize, itemSize);
-      for (var row = 0; row < verticalItemsCount; row++) {
+      for (var row = 0; row < levelCatelog.verticalItemsCount; row++) {
         var founded = false;
-        for (var col = 0; col < horizontalItemsCount; col++) {
+        for (var col = 0; col < levelCatelog.horizontalItemsCount; col++) {
           Vector2 position = Vector2(
-            (col + 0.5) * itemSize +
-                col * itemGutter +
-                itemSize * ((maxItemInRowAndCol - horizontalItemsCount) / 2),
-            (row + 0.5) * itemSize +
-                row * itemGutter +
-                itemSize * ((maxItemInRowAndCol - verticalItemsCount) / 2),
+            (col + 0.5) * itemSize + col * itemGutter,
+            (row + 0.5) * itemSize + row * itemGutter,
           );
           if (board[row][col] == node) {
             node.position = position;
@@ -107,17 +114,13 @@ class RecycleRush extends FlameGame {
     }
     for (var item in world.children.query<Item>()) {
       item.size = Vector2(itemSize, itemSize);
-      for (var row = 0; row < verticalItemsCount; row++) {
+      for (var row = 0; row < levelCatelog.verticalItemsCount; row++) {
         var founded = false;
-        for (var col = 0; col < horizontalItemsCount; col++) {
+        for (var col = 0; col < levelCatelog.horizontalItemsCount; col++) {
           if (!(board[row][col]!.isUsable)) continue;
           Vector2 position = Vector2(
-            (col + 0.5) * itemSize +
-                col * itemGutter +
-                itemSize * ((maxItemInRowAndCol - horizontalItemsCount) / 2),
-            (row + 0.5) * itemSize +
-                row * itemGutter +
-                itemSize * ((maxItemInRowAndCol - verticalItemsCount) / 2),
+            (col + 0.5) * itemSize + col * itemGutter,
+            (row + 0.5) * itemSize + row * itemGutter,
           );
           if (board[row][col]!.item == item) {
             item.position = position;
@@ -183,9 +186,9 @@ class RecycleRush extends FlameGame {
       ItemType.bottle,
     ]);
     // initialize the board
-    for (var row = 0; row < verticalItemsCount; row++) {
+    for (var row = 0; row < levelCatelog.verticalItemsCount; row++) {
       List<Node?> rowNodes = [];
-      for (var col = 0; col < horizontalItemsCount; col++) {
+      for (var col = 0; col < levelCatelog.horizontalItemsCount; col++) {
         rowNodes.add(null);
       }
       board.add(rowNodes);
