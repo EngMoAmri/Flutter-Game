@@ -1,12 +1,13 @@
-import 'package:flame/flame.dart';
+// import 'package:flame/flame.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'pages/home_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  Flame.device.fullScreen();
-  Flame.device.setLandscape();
+  // TODO move this to the aim game
+  // Flame.device.fullScreen();
+  // Flame.device.setLandscape();
   runApp(
       // const AimShootGamePage());
       const GetMaterialApp(
@@ -15,6 +16,9 @@ void main() {
 
 /// TODO list
 /// Game 1
+/// - win layout
+/// - loss layout
+/// - pause layout
 /// - helps items
 /// - main page
 /// - levels
