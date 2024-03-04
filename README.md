@@ -20,7 +20,7 @@ In this game we tried to make a game that related to educate players about envir
 
 
 ## Items Images
-All images was generated using AI website [Leonardo AI](https://app.leonardo.ai/ai-generations)
+All images was generated using AI website [Leonardo AI](https://app.leonardo.ai/ai-generations) and I also used some free assets from [Game Art 2D](https://www.gameart2d.com/freebies.html)
 
 | Bottle  | Can | Cartoon | Glass | Pan |
 | --- | --- | --- | --- | --- |
