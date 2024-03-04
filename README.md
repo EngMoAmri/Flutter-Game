@@ -1,7 +1,9 @@
 # Global Gamers Challenge
 
-This is our game for the [```Global Gamers Challenge```](https://flutter.dev/global-gamers) competetion.
+This is our game for the [```Global Gamers Challenge```](https://flutter.dev/global-gamers) competetion, but unfortunately I could'nt finish it.
+
 In this game we tried to make a game that related to educate players about environment saving
+
 ## Pages
 
 - Levels Page
@@ -16,7 +18,9 @@ In this game we tried to make a game that related to educate players about envir
     
     ![This is a gif of aim game](/screenshots/aim.gif)
 
+
 ## Items Images
+All images was generated using AI website [Leonardo AI](https://app.leonardo.ai/ai-generations)
 
 | Bottle  | Can | Cartoon | Glass | Pan |
 | --- | --- | --- | --- | --- |
